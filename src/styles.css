@@ -204,7 +204,7 @@
   .hero-vignette {
     background: linear-gradient(0deg, var(--background) 0%, color-mix(in oklab, var(--background) 28%, transparent) 58%, color-mix(in oklab, var(--background) 65%, transparent) 100%);
   }
-  .hero-shell > img { object-position: 58% center; }
+  .hero-media { object-position: 58% center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
