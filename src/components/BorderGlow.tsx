@@ -63,7 +63,8 @@ function BorderGlow({
   };
 
   gradientPositions.forEach((position, index) => {
-    const color = colors[Math.min(colorMap[index], colors.length - 1)] ?? colors[0];
+    const colorIndex = colorMap[index] ?? 0;
+    const color = colors[Math.min(colorIndex, colors.length - 1)] ?? "#ef2b32";
     style[`--gradient-${index + 1}`] = `radial-gradient(at ${position}, ${color} 0px, transparent 50%)`;
   });
 
