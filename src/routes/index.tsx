@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight, Box, Layers3, Ruler } from "lucide-react";
 import heroImage from "@/assets/snakelab-hero.jpg";
+import heroPrintingVideo from "@/assets/snakelab-hero-printing.mp4.asset.json";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { products } from "@/lib/products";
@@ -27,7 +28,17 @@ function Index() {
   return (
     <main>
       <section className="hero-shell relative min-h-[92svh] overflow-hidden border-b border-border pt-18">
-        <img src={heroImage} alt="Impresora 3D SNAKELAB creando una serpiente mecánica" width={1600} height={1008} fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <video
+          className="hero-media absolute inset-0 h-full w-full object-cover object-center"
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={heroImage}
+          aria-label="Impresora 3D SNAKELAB fabricando un dragón mecánico"
+        >
+          <source src={heroPrintingVideo.url} type="video/mp4" />
+        </video>
         <div className="hero-vignette absolute inset-0" />
         <div className="hero-grid absolute inset-0 opacity-30" />
         <div className="relative z-10 mx-auto flex min-h-[calc(92svh-4.5rem)] max-w-7xl flex-col justify-between px-5 py-10 lg:px-8 lg:py-14">
