@@ -22,8 +22,7 @@ export function StoreShell({ children }: { children: ReactNode }) {
 function Brand() {
   return (
     <Link to="/" className="group flex items-center gap-3" aria-label="SNAKELAB, inicio">
-      <span className="grid size-8 place-items-center rounded-sm border border-primary text-sm font-black text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">S</span>
-      <span className="font-display text-lg font-bold tracking-[0.18em]">SNAKE<span className="text-primary">LAB</span></span>
+            <img src="/imagens/imagem-bb0a56df.webp" alt="SNAKELAB" className="h-10 w-auto object-contain" />
     </Link>
   );
 }
