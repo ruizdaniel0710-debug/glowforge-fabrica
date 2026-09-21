@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useState } from "react";
+import AccordionGallery from "@/components/AccordionGallery";
 import { useCart } from "@/components/cart-context";
 import { Button } from "@/components/ui/button";
-import { formatPrice, getProduct } from "@/lib/products";
+import { formatPrice, getProduct, products } from "@/lib/products";
 
 export const Route = createFileRoute("/producto/$slug")({
   loader: ({ params }) => {
@@ -27,14 +28,30 @@ function ProductPage() {
   const product = Route.useLoaderData();
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+  const galleryItems = [
+    { image: product.image, label: product.name },
+    ...products
+      .filter((p) => p.slug !== product.slug)
+      .map((p) => ({ image: p.image, label: p.name, link: `/producto/${p.slug}` })),
+  ];
   return (
     <main className="min-h-screen pt-18">
       <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
         <Button variant="ghost" asChild><Link to="/" hash="productos"><ArrowLeft /> Volver al catálogo</Link></Button>
         <div className="mt-6 grid overflow-hidden border border-border bg-card lg:grid-cols-2">
-          <div className="relative min-h-[420px] overflow-hidden border-b border-border lg:min-h-[720px] lg:border-b-0 lg:border-r">
-            <img src={product.image} alt={product.name} width={1024} height={1024} className="absolute inset-0 h-full w-full object-cover" />
-            <span className="absolute left-5 top-5 border border-border bg-background/80 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] backdrop-blur">{product.category}</span>
+          <div className="relative flex flex-col gap-5 overflow-hidden border-b border-border p-5 sm:p-8 lg:border-b-0 lg:border-r">
+            <span className="w-fit border border-border bg-background/80 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] backdrop-blur">{product.category}</span>
+            <AccordionGallery
+              items={galleryItems}
+              defaultIndex={0}
+              accentColor="#ef2b32"
+              overlayColor="#0a0713"
+              height={560}
+              radius={6}
+              trigger="hover"
+              className="flex-1"
+            />
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Explora las vistas — pasa el cursor o toca cada panel</p>
           </div>
           <div className="flex flex-col p-6 sm:p-10 lg:p-14">
             <p className="eyebrow">Objeto / {product.slug}</p>
