@@ -4,6 +4,8 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { CartProvider, useCart } from "@/components/cart-context";
 import { formatPrice } from "@/lib/products";
+import GlassSurface from "@/components/GlassSurface";
+
 
 export function StoreShell({ children }: { children: ReactNode }) {
   return (
@@ -30,8 +32,10 @@ function SiteHeader() {
   const { openCart, totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
+        <header className="fixed inset-x-0 top-0 z-40 border-b border-border/70">
+      <GlassSurface width="100%" height={72} borderRadius={0} backgroundOpacity={0.16} saturation={1.35} distortionScale={-120} className="site-header-glass">
+        <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-5 lg:px-8">
+
         <Brand />
         <nav className="hidden items-center gap-8 md:flex" aria-label="Navegación principal">
           <Link to="/" activeOptions={{ exact: true }} className="nav-link">Inicio</Link>
@@ -47,8 +51,10 @@ function SiteHeader() {
             {menuOpen ? <X /> : <Menu />}
           </Button>
         </div>
-      </div>
+              </div>
+      </GlassSurface>
       {menuOpen && (
+
         <nav className="border-t border-border bg-background px-5 py-5 md:hidden" aria-label="Navegación móvil">
           <div className="flex flex-col gap-4">
             <Link to="/" onClick={() => setMenuOpen(false)} className="nav-link">Inicio</Link>
