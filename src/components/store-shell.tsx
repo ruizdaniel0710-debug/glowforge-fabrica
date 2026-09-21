@@ -4,6 +4,8 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { CartProvider, useCart } from "@/components/cart-context";
 import { formatPrice } from "@/lib/products";
+import GlassSurface from "@/components/GlassSurface";
+
 
 export function StoreShell({ children }: { children: ReactNode }) {
   return (
