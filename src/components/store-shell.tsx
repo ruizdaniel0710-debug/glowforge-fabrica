@@ -51,8 +51,10 @@ function SiteHeader() {
             {menuOpen ? <X /> : <Menu />}
           </Button>
         </div>
-      </div>
+              </div>
+      </GlassSurface>
       {menuOpen && (
+
         <nav className="border-t border-border bg-background px-5 py-5 md:hidden" aria-label="Navegación móvil">
           <div className="flex flex-col gap-4">
             <Link to="/" onClick={() => setMenuOpen(false)} className="nav-link">Inicio</Link>
