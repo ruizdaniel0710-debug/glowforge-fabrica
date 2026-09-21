@@ -32,8 +32,10 @@ function SiteHeader() {
   const { openCart, totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
+        <header className="fixed inset-x-0 top-0 z-40 border-b border-border/70">
+      <GlassSurface width="100%" height={72} borderRadius={0} backgroundOpacity={0.16} saturation={1.35} distortionScale={-120} className="site-header-glass">
+        <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-5 lg:px-8">
+
         <Brand />
         <nav className="hidden items-center gap-8 md:flex" aria-label="Navegación principal">
           <Link to="/" activeOptions={{ exact: true }} className="nav-link">Inicio</Link>
