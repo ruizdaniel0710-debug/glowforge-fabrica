@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useState } from "react";
+import AccordionGallery from "@/components/AccordionGallery";
 import { useCart } from "@/components/cart-context";
 import { Button } from "@/components/ui/button";
-import { formatPrice, getProduct } from "@/lib/products";
+import { formatPrice, getProduct, products } from "@/lib/products";
 
 export const Route = createFileRoute("/producto/$slug")({
   loader: ({ params }) => {
@@ -27,6 +28,12 @@ function ProductPage() {
   const product = Route.useLoaderData();
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+  const galleryItems = [
+    { image: product.image, label: product.name },
+    ...products
+      .filter((p) => p.slug !== product.slug)
+      .map((p) => ({ image: p.image, label: p.name, link: `/producto/${p.slug}` })),
+  ];
   return (
     <main className="min-h-screen pt-18">
       <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
