@@ -64,6 +64,54 @@ export const products: Product[] = [
     dimensions: "20 × 18 × 25 cm",
     image: astronautImage,
   },
+  {
+    slug: "pulpo-articulado",
+    name: "Pulpo Articulado Fidget",
+    category: "Coleccionables",
+    price: 28000,
+    shortDescription: "Pulpo flexible con tentáculos móviles, un clásico anti-estrés impreso en una sola pieza.",
+    description:
+      "Pulpo articulado impreso en una sola pieza, sin ensamblaje: cada tentáculo se dobla y gira con suavidad. Uno de los modelos más descargados e impresos del mundo maker, ideal como juguete sensorial o regalo de escritorio.",
+    material: "PLA seda",
+    dimensions: "12 × 12 × 6 cm",
+    image: dragonImage,
+  },
+  {
+    slug: "lampara-espiral",
+    name: "Lámpara Espiral Vase Mode",
+    category: "Hogar",
+    price: 52000,
+    shortDescription: "Pantalla impresa en modo espiral que difunde la luz cálida en patrones suaves.",
+    description:
+      "Pantalla de lámpara impresa en vase mode: una sola pared continua que deja pasar la luz creando un patrón espiral en la pared. Compatible con portalámparas E27 y bombillas LED de bajo calor.",
+    material: "PLA translúcido",
+    dimensions: "16 × 16 × 24 cm",
+    image: planterImage,
+  },
+  {
+    slug: "soporte-audifonos",
+    name: "Soporte de Audífonos Minimal",
+    category: "Escritorio",
+    price: 32000,
+    shortDescription: "Soporte de escritorio para audífonos con base antideslizante y paso de cable.",
+    description:
+      "Soporte en voladizo para audífonos con base contrapesada, superficie de contacto ancha para no marcar la diadema y canal trasero para recoger el cable. Impreso en PETG para resistir el uso diario.",
+    material: "PETG técnico",
+    dimensions: "12 × 10 × 28 cm",
+    image: organizerImage,
+  },
+  {
+    slug: "portalapices-engranajes",
+    name: "Portalápices de Engranajes",
+    category: "Decoración",
+    price: 38000,
+    shortDescription: "Portalápices con engranajes funcionales que giran al mover la pieza superior.",
+    description:
+      "Portalápices con mecanismo de engranajes impresos y ensamblados en sitio: al girar el anillo superior todo el tren de engranajes se mueve. Pieza de exhibición para escritorios de ingeniería y diseño.",
+    material: "PLA mate bicolor",
+    dimensions: "11 × 11 × 14 cm",
+    image: astronautImage,
+  },
 ];
 
 export const formatPrice = (price: number) =>
