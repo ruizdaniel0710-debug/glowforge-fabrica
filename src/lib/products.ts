@@ -115,7 +115,9 @@ export const products: Product[] = [
 ];
 
 export const formatPrice = (price: number) =>
-  new Intl.NumberFormat("es-CO", {
+  price <= 0
+    ? "A cotizar"
+    : new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
     maximumFractionDigits: 0,
