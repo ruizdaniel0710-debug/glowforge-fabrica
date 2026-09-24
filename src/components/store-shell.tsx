@@ -68,6 +68,7 @@ function SiteHeader() {
             <Link to="/" hash="productos" onClick={() => setMenuOpen(false)} className="nav-link">Productos</Link>
             <Link to="/" hash="personalizado" onClick={() => setMenuOpen(false)} className="nav-link">Personalizado</Link>
             <Link to="/" hash="proceso" onClick={() => setMenuOpen(false)} className="nav-link">El proceso</Link>
+            <Link to="/seguimiento" onClick={() => setMenuOpen(false)} className="nav-link">Seguimiento</Link>
           </div>
         </nav>
       )}
