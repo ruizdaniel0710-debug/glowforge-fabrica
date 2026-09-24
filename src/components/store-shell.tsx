@@ -47,6 +47,7 @@ function SiteHeader() {
           <Link to="/" hash="productos" className="nav-link">Productos</Link>
           <Link to="/" hash="personalizado" className="nav-link">Personalizado</Link>
           <Link to="/" hash="proceso" className="nav-link">El proceso</Link>
+          <Link to="/seguimiento" className="nav-link">Seguimiento</Link>
         </nav>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={openCart} aria-label={`Abrir carrito, ${totalItems} productos`} className="relative">
@@ -67,6 +68,7 @@ function SiteHeader() {
             <Link to="/" hash="productos" onClick={() => setMenuOpen(false)} className="nav-link">Productos</Link>
             <Link to="/" hash="personalizado" onClick={() => setMenuOpen(false)} className="nav-link">Personalizado</Link>
             <Link to="/" hash="proceso" onClick={() => setMenuOpen(false)} className="nav-link">El proceso</Link>
+            <Link to="/seguimiento" onClick={() => setMenuOpen(false)} className="nav-link">Seguimiento</Link>
           </div>
         </nav>
       )}
