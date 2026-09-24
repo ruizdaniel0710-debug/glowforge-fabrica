@@ -1,9 +1,10 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { FileUp, Trash2, UploadCloud } from "lucide-react";
-import { useCart } from "@/components/cart-context";
+import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
-import type { Product } from "@/lib/products";
-import customImage from "@/assets/product-organizer.jpg";
+import { supabase } from "@/integrations/supabase/client";
+import { createCustomRequest } from "@/lib/requests.functions";
 
 const ACCEPTED = ".stl,.obj,.3mf,.step,.stp,.zip,image/*";
 const MAX_FILES = 8;
@@ -13,7 +14,11 @@ const formatSize = (bytes: number) =>
   bytes > 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
 export function CustomOrder() {
-  const { addItem } = useCart();
+  const create = useServerFn(createCustomRequest);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [code, setCode] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
@@ -50,27 +55,31 @@ export function CustomOrder() {
     event.target.value = "";
   };
 
-  const submit = () => {
-    if (files.length === 0) {
-      setError("Sube al menos una foto o un archivo 3D para pedir la cotización.");
-      return;
-    }
-    const trimmedNotes = notes.trim().slice(0, 600);
-    const product: Product = {
-      slug: `personalizado-${Date.now()}`,
-      name: "Pedido personalizado",
-      category: "Personalizado",
-      price: 0,
-      shortDescription: `${files.length} archivo${files.length > 1 ? "s" : ""}: ${files.map((file) => file.name).join(", ")}`,
-      description: trimmedNotes || "Sin notas adicionales.",
-      material: "Por definir",
-      dimensions: "Por definir",
-      image: customImage,
-    };
-    addItem(product);
-    setFiles([]);
-    setNotes("");
+  const submit = async () => {
+    if (files.length === 0) return setError("Sube al menos una foto o un archivo 3D para pedir la cotización.");
+    if (!name.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) return setError("Escribe tu nombre y un correo válido.");
+    setSending(true);
     setError(null);
+    try {
+      const folder = `requests/${crypto.randomUUID()}`;
+      const uploaded = [];
+      for (const file of files) {
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${folder}/${safe}`;
+        const { error: upErr } = await supabase.storage.from("custom-uploads").upload(path, file);
+        if (upErr) throw upErr;
+        uploaded.push({ name: file.name, path, size: file.size });
+      }
+      const res = await create({ data: { name: name.trim(), email: email.trim(), notes: notes.trim().slice(0, 600), files: uploaded } });
+      setCode(res.code);
+      setFiles([]);
+      setNotes("");
+    } catch (e) {
+      console.error(e);
+      setError("No pudimos enviar tu solicitud. Inténtalo de nuevo.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -121,6 +130,11 @@ export function CustomOrder() {
           </ul>
         )}
 
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder="Tu nombre" className="border border-border bg-background/60 px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} placeholder="Tu correo" className="border border-border bg-background/60 px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
+        </div>
+
         <textarea
           value={notes}
           maxLength={600}
@@ -132,7 +146,14 @@ export function CustomOrder() {
 
         {error && <p className="mt-3 text-sm text-primary">{error}</p>}
 
-        <Button className="mt-4 w-full" onClick={submit}>Pedir cotización</Button>
+        {code && (
+          <div className="mt-4 border border-primary/60 bg-primary/5 p-4 text-sm">
+            <p>¡Solicitud enviada! Tu código de seguimiento es <strong className="font-mono text-primary">{code}</strong>.</p>
+            <p className="mt-1 text-muted-foreground">Guárdalo: con él y tu correo puedes ver el estado en <Link to="/seguimiento" search={{ code }} className="text-primary underline">Seguimiento</Link>.</p>
+          </div>
+        )}
+
+        <Button className="mt-4 w-full" onClick={submit} disabled={sending}>{sending ? "Enviando…" : "Pedir cotización"}</Button>
         <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Precio a confirmar tras revisar los archivos</p>
       </div>
     </div>
