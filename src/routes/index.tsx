@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight, Box, Layers3, Ruler } from "lucide-react";
 import heroImage from "@/assets/snakelab-hero.jpg";
 import heroPrintingVideo from "@/assets/snakelab-hero-printing.mp4.asset.json";
+import { CustomOrder } from "@/components/custom-order";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { products } from "@/lib/products";
@@ -68,6 +69,12 @@ function Index() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product, index) => <ProductCard key={product.slug} product={product} index={index} />)}
           </div>
+        </div>
+      </section>
+
+      <section id="personalizado" className="scroll-mt-18 border-t border-border px-5 pb-24 lg:px-8 lg:pb-32">
+        <div className="mx-auto max-w-7xl pt-20 lg:pt-24">
+          <CustomOrder />
         </div>
       </section>
 

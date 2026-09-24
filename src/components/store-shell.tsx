@@ -45,6 +45,7 @@ function SiteHeader() {
         <nav className="hidden items-center gap-8 md:flex" aria-label="Navegación principal">
           <Link to="/" activeOptions={{ exact: true }} className="nav-link">Inicio</Link>
           <Link to="/" hash="productos" className="nav-link">Productos</Link>
+          <Link to="/" hash="personalizado" className="nav-link">Personalizado</Link>
           <Link to="/" hash="proceso" className="nav-link">El proceso</Link>
         </nav>
         <div className="flex items-center gap-2">
@@ -64,6 +65,7 @@ function SiteHeader() {
           <div className="flex flex-col gap-4">
             <Link to="/" onClick={() => setMenuOpen(false)} className="nav-link">Inicio</Link>
             <Link to="/" hash="productos" onClick={() => setMenuOpen(false)} className="nav-link">Productos</Link>
+            <Link to="/" hash="personalizado" onClick={() => setMenuOpen(false)} className="nav-link">Personalizado</Link>
             <Link to="/" hash="proceso" onClick={() => setMenuOpen(false)} className="nav-link">El proceso</Link>
           </div>
         </nav>
