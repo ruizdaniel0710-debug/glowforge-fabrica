@@ -240,7 +240,17 @@ function CustomPaymentModal({ request, onClose, onSuccess }: { request: any; onC
           }
         }
       });
+      
       onSuccess();
+      
+      // Redirect or show WhatsApp based on method
+      if (selectedPayment === "wompi") {
+        window.open("https://checkout.wompi.co/l/VPOS_6miq11", "_blank");
+      } else {
+        const msg = encodeURIComponent(`Hola SNAKE LAB! Acabo de aprobar mi cotización ${request.code}. Aquí tienes mi comprobante de pago:`);
+        window.open(`https://wa.me/573214403628?text=${msg}`, "_blank");
+      }
+      
     } catch (err) {
       console.error(err);
       alert("Hubo un error procesando el pago. Inténtalo de nuevo.");
@@ -315,10 +325,8 @@ function CustomPaymentModal({ request, onClose, onSuccess }: { request: any; onC
             <h3 className="font-display font-bold text-sm uppercase tracking-wider mb-3">Método de Pago</h3>
             <div className="space-y-2">
               {[
-                { id: "transferencia", name: "Transferencia Bancaria", desc: "Transferencia directa a nuestra cuenta", icon: <Building2 className="size-5" />, color: "bg-blue-500/10 text-blue-400" },
-                { id: "nequi", name: "Nequi", desc: "Paga fácil desde tu celular", icon: <img src="/imagens/nequi-logo.png" alt="Nequi" className="size-6 object-contain" />, color: "bg-purple-500/10 text-purple-400" },
-                { id: "daviplata", name: "Daviplata", desc: "Transferencia por Daviplata", icon: <span className="text-sm font-black">D</span>, color: "bg-red-500/10 text-red-400" },
-                { id: "mercadopago", name: "Mercado Pago", desc: "Paga con tarjeta o PSE", icon: <span className="text-xs font-black">MP</span>, color: "bg-sky-500/10 text-sky-400" },
+                { id: "wompi", name: "Pagar en línea (Wompi)", desc: "Nequi, Bancolombia, PSE y Tarjetas", icon: <CreditCard className="size-5" />, color: "bg-blue-500/10 text-blue-400" },
+                { id: "transferencia", name: "Transferencia Directa", desc: "Acordar pago manualmente (Nequi/Bancolombia)", icon: <Building2 className="size-5" />, color: "bg-green-500/10 text-green-400" },
               ].map(method => (
                 <button
                   type="button"

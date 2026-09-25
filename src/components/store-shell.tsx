@@ -432,10 +432,8 @@ function CheckoutModal() {
                 <h3 className="font-display font-bold text-sm uppercase tracking-wider mb-3">Método de Pago</h3>
                 <div className="space-y-2">
                   {[
-                    { id: "transferencia", name: "Transferencia Bancaria", desc: "Transferencia directa a nuestra cuenta", icon: <Building2 className="size-5" />, color: "bg-blue-500/10 text-blue-400" },
-                    { id: "nequi", name: "Nequi", desc: "Paga fácil desde tu celular", icon: <img src="/imagens/nequi-logo.png" alt="Nequi" className="size-6 object-contain" />, color: "bg-purple-500/10 text-purple-400" },
-                    { id: "daviplata", name: "Daviplata", desc: "Transferencia por Daviplata", icon: <span className="text-sm font-black">D</span>, color: "bg-red-500/10 text-red-400" },
-                    { id: "mercadopago", name: "Mercado Pago", desc: "Paga con tarjeta o PSE", icon: <span className="text-xs font-black">MP</span>, color: "bg-sky-500/10 text-sky-400" },
+                    { id: "wompi", name: "Pagar en línea (Wompi)", desc: "Nequi, Bancolombia, PSE y Tarjetas", icon: <CreditCard className="size-5" />, color: "bg-blue-500/10 text-blue-400" },
+                    { id: "transferencia", name: "Transferencia Directa", desc: "Acordar pago manualmente (Nequi/Bancolombia)", icon: <Building2 className="size-5" />, color: "bg-green-500/10 text-green-400" },
                   ].map(method => (
                     <button
                       type="button"
@@ -510,16 +508,32 @@ function CheckoutModal() {
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Código de seguimiento</p>
               <p className="mt-1 font-mono text-2xl font-bold text-primary">{orderCode}</p>
             </div>
-            <p className="mt-6 text-sm text-muted-foreground">
-              Guarda este código para consultar el estado de tu pedido en la sección de <strong>Seguimiento</strong>.
-            </p>
+            
+            {selectedPayment === "wompi" ? (
+              <div className="mt-6 p-4 border border-primary/20 bg-primary/5 rounded-lg text-left">
+                <p className="text-sm font-semibold mb-2">Paso final: Realizar el pago</p>
+                <p className="text-xs text-muted-foreground mb-4">Serás redirigido a Wompi para pagar de forma segura con Nequi, PSE o Tarjeta. ¡Pon el valor exacto de tu compra!</p>
+                <Button asChild size="lg" className="w-full animate-pulse shadow-[0_0_15px_rgba(var(--primary),0.5)]">
+                  <a href="https://checkout.wompi.co/l/VPOS_6miq11" target="_blank" rel="noopener noreferrer">
+                    Pagar {formatPrice(subtotal)} en Wompi
+                  </a>
+                </Button>
+              </div>
+            ) : (
+              <p className="mt-6 text-sm text-muted-foreground">
+                Guarda este código para consultar el estado de tu pedido en la sección de <strong>Seguimiento</strong>.
+              </p>
+            )}
+
             <div className="flex gap-4 mt-8 justify-center">
               <Button variant="outline" onClick={handleClose}>Cerrar</Button>
-              <Button asChild onClick={handleClose}>
-                <a href={`https://wa.me/573214403628?text=${encodeURIComponent(`Hola SNAKE LAB! Acabo de hacer un pedido con código ${orderCode}`)}`} target="_blank" rel="noopener noreferrer">
-                  Contactar por WhatsApp
-                </a>
-              </Button>
+              {selectedPayment !== "wompi" && (
+                <Button asChild onClick={handleClose}>
+                  <a href={`https://wa.me/573214403628?text=${encodeURIComponent(`Hola SNAKE LAB! Acabo de hacer un pedido con código ${orderCode}. Aquí tienes mi comprobante de pago:`)}`} target="_blank" rel="noopener noreferrer">
+                    Enviar comprobante
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
         )}
