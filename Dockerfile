@@ -9,16 +9,16 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Production stage
+# Production stage - same base so native binaries are compatible
 FROM node:20-slim
 
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-RUN npm rebuild better-sqlite3
+RUN npm ci --omit=dev && npm rebuild better-sqlite3
 
+# Copy the built output
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/init-db.mjs ./init-db.mjs
 COPY --from=builder /app/public ./public
