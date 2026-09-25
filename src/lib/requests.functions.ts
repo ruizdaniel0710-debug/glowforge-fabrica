@@ -1,10 +1,48 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import Database from "better-sqlite3";
+import path from "path";
+import fs from "fs/promises";
+
+const dbPath = path.resolve(process.cwd(), "data", "snake-lab.db");
 
 export const REQUEST_STATUSES = ["recibida", "en revisión", "cotizada", "aprobada", "en impresión", "enviada", "cancelada"] as const;
 
-const fileSchema = z.object({ name: z.string().max(200), path: z.string().max(400).startsWith("requests/"), size: z.number().nonnegative() });
+const fileSchema = z.object({ name: z.string().max(200), path: z.string().max(400).startsWith("/uploads/requests/"), size: z.number().nonnegative() });
+
+function initDb() {
+  const db = new Database(dbPath);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS custom_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      customer_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      notes TEXT,
+      files TEXT,
+      status TEXT DEFAULT 'recibida',
+      quote_amount REAL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS request_replies (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      request_id INTEGER,
+      message TEXT,
+      amount REAL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (request_id) REFERENCES custom_requests(id)
+    );
+  `);
+  
+  try {
+    db.exec(`ALTER TABLE custom_requests ADD COLUMN shipping_info TEXT`);
+  } catch (e) {
+    // Column might already exist, ignore error
+  }
+  
+  return db;
+}
 
 function makeCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -15,7 +53,7 @@ function makeCode() {
 }
 
 export const createCustomRequest = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
+  .validator((d: unknown) =>
     z.object({
       name: z.string().trim().min(1).max(100),
       email: z.string().trim().email().max(255),
@@ -24,93 +62,168 @@ export const createCustomRequest = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = initDb();
     const code = makeCode();
-    const { error } = await supabaseAdmin.from("custom_requests").insert({
-      code,
-      customer_name: data.name,
-      email: data.email.toLowerCase(),
-      notes: data.notes,
-      files: data.files,
-    });
-    if (error) {
-      console.error(error);
+    try {
+      db.prepare(`
+        INSERT INTO custom_requests (code, customer_name, email, notes, files)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(code, data.name, data.email.toLowerCase(), data.notes, JSON.stringify(data.files));
+      return { code };
+    } catch (e: any) {
+      console.error(e);
       throw new Error("No pudimos registrar la solicitud.");
+    } finally {
+      db.close();
     }
-    return { code };
   });
 
 export const lookupCustomRequest = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ code: z.string().trim().max(20), email: z.string().trim().email().max(255) }).parse(d))
+  .validator((d: unknown) => z.object({ code: z.string().trim().max(20), email: z.string().trim().email().max(255) }).parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: req } = await supabaseAdmin
-      .from("custom_requests")
-      .select("id, code, customer_name, notes, files, status, quote_amount, created_at, updated_at")
-      .eq("code", data.code.toUpperCase())
-      .eq("email", data.email.toLowerCase())
-      .maybeSingle();
-    if (!req) return { found: false as const };
-    const { data: replies } = await supabaseAdmin
-      .from("request_replies")
-      .select("id, message, amount, created_at")
-      .eq("request_id", req.id)
-      .order("created_at", { ascending: true });
-    const files = ((req.files as { name: string }[]) ?? []).map((f) => f.name);
-    return {
-      found: true as const,
-      request: { code: req.code, name: req.customer_name, notes: req.notes, files, status: req.status, quoteAmount: req.quote_amount, createdAt: req.created_at, updatedAt: req.updated_at },
-      replies: replies ?? [],
-    };
-  });
-
-export const checkIsAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    return { isAdmin: !!data };
+    const db = initDb();
+    try {
+      const req = db.prepare(`SELECT * FROM custom_requests WHERE code = ? AND email = ?`).get(data.code.toUpperCase(), data.email.toLowerCase()) as any;
+      if (!req) return { found: false as const };
+      
+      const replies = db.prepare(`SELECT * FROM request_replies WHERE request_id = ? ORDER BY created_at ASC`).all(req.id) as any[];
+      
+      const files = (JSON.parse(req.files || '[]') as { name: string }[]).map((f) => f.name);
+      
+      return {
+        found: true as const,
+        request: {
+          ...req,
+          files,
+          createdAt: req.created_at,
+          updatedAt: req.updated_at,
+          quoteAmount: req.quote_amount,
+        },
+        replies: replies.map(r => ({
+          ...r,
+          created_at: r.created_at
+        }))
+      };
+    } finally {
+      db.close();
+    }
   });
 
 export const listCustomRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("custom_requests")
-      .select("*, request_replies(id, message, amount, created_at)")
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    const out = [];
-    for (const r of data ?? []) {
-      const files = [];
-      for (const f of (r.files as { name: string; path: string; size: number }[]) ?? []) {
-        const { data: s } = await context.supabase.storage.from("custom-uploads").createSignedUrl(f.path, 3600);
-        files.push({ name: f.name, size: f.size, url: s?.signedUrl ?? null });
-      }
-      out.push({ ...r, files, request_replies: [...(r.request_replies ?? [])].sort((a, b) => a.created_at.localeCompare(b.created_at)) });
+  .handler(async () => {
+    const db = initDb();
+    try {
+      const reqs = db.prepare(`SELECT * FROM custom_requests ORDER BY created_at DESC`).all() as any[];
+      return reqs.map(req => ({
+        ...req,
+        files: JSON.parse(req.files || '[]'),
+        createdAt: req.created_at,
+        updatedAt: req.updated_at,
+        quoteAmount: req.quote_amount,
+      }));
+    } finally {
+      db.close();
     }
-    return out;
   });
 
 export const updateCustomRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d: unknown) =>
     z.object({
-      id: z.string().uuid(),
-      status: z.enum(REQUEST_STATUSES),
-      message: z.string().trim().max(1000).optional(),
-      amount: z.number().int().nonnegative().nullable().optional(),
-    }).parse(d),
+      id: z.union([z.string(), z.number()]),
+      status: z.enum(REQUEST_STATUSES)
+    }).parse(d)
   )
-  .handler(async ({ data, context }) => {
-    const patch: { status: string; updated_at: string; quote_amount?: number | null } = { status: data.status, updated_at: new Date().toISOString() };
-    if (data.amount !== undefined) patch.quote_amount = data.amount;
-    const { error } = await context.supabase.from("custom_requests").update(patch).eq("id", data.id);
-    if (error) throw new Error(error.message);
-    if (data.message) {
-      const { error: e2 } = await context.supabase
-        .from("request_replies")
-        .insert({ request_id: data.id, message: data.message, amount: data.amount ?? null });
-      if (e2) throw new Error(e2.message);
+  .handler(async ({ data }) => {
+    const db = initDb();
+    try {
+      db.prepare(`UPDATE custom_requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+        .run(data.status, Number(data.id));
+      return { success: true };
+    } catch (e: any) {
+      console.error(e);
+      throw new Error("No pudimos actualizar la solicitud.");
+    } finally {
+      db.close();
     }
-    return { ok: true };
+  });
+
+export const payCustomRequest = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({
+    id: z.number(),
+    shipping: z.object({
+      phone: z.string(),
+      address: z.string(),
+      department: z.string(),
+      city: z.string(),
+      paymentMethod: z.string(),
+    })
+  }).parse(d))
+  .handler(async ({ data }) => {
+    const db = initDb();
+    try {
+      db.prepare(`
+        UPDATE custom_requests 
+        SET status = 'aprobada', shipping_info = ?
+        WHERE id = ?
+      `).run(JSON.stringify(data.shipping), data.id);
+      return { success: true };
+    } catch (e: any) {
+      console.error(e);
+      throw new Error("No pudimos procesar el pago.");
+    } finally {
+      db.close();
+    }
+  });
+
+export const uploadRequestFile = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    if (!(data instanceof FormData)) throw new Error("Expected FormData");
+    const file = data.get("file");
+    if (!(file instanceof File)) throw new Error("Expected File");
+    
+    // 1. Validación de tamaño (Máximo 25MB)
+    const MAX_SIZE = 25 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      throw new Error(`El archivo excede el límite de 25MB permitido.`);
+    }
+
+    // 2. Validación estricta de extensión para evitar ejecutables o scripts maliciosos
+    const ext = file.name.split('.').pop()?.toLowerCase() || "";
+    const allowedExtensions = ["stl", "obj", "3mf", "step", "stp", "zip", "png", "jpg", "jpeg", "webp"];
+    
+    if (!allowedExtensions.includes(ext)) {
+      throw new Error(`Tipo de archivo no permitido: .${ext}. Solo se permiten imágenes o modelos 3D.`);
+    }
+
+    return { file };
+  })
+  .handler(async ({ data }) => {
+    const { file } = data;
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const filename = `req-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    
+    // Ensure the uploads/requests directory exists
+    const dirPath = path.resolve(process.cwd(), "public", "uploads", "requests");
+    await fs.mkdir(dirPath, { recursive: true });
+    
+    const uploadPath = path.resolve(dirPath, filename);
+    await fs.writeFile(uploadPath, buffer);
+    return { path: `/uploads/requests/${filename}` };
+  });
+
+export const deleteCustomRequest = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({ id: z.union([z.string(), z.number()]) }).parse(d))
+  .handler(async ({ data }) => {
+    const db = initDb();
+    try {
+      db.prepare(`DELETE FROM request_replies WHERE request_id = ?`).run(Number(data.id));
+      db.prepare(`DELETE FROM custom_requests WHERE id = ?`).run(Number(data.id));
+      return { success: true };
+    } catch (e: any) {
+      console.error(e);
+      throw new Error("No pudimos eliminar la solicitud.");
+    } finally {
+      db.close();
+    }
   });

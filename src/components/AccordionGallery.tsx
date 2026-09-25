@@ -29,6 +29,7 @@ type AccordionGalleryProps = {
   showLabels?: boolean;
   grayscale?: boolean;
   className?: string;
+  onItemClick?: (index: number) => void;
 };
 
 const AccordionGallery = ({
@@ -51,6 +52,7 @@ const AccordionGallery = ({
   showLabels = true,
   grayscale = true,
   className = "",
+  onItemClick,
 }: AccordionGalleryProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLElement | null)[]>([]);
@@ -172,6 +174,9 @@ const AccordionGallery = ({
     if (i !== active) {
       e.preventDefault();
       setActive(i);
+    }
+    if (onItemClick) {
+      onItemClick(i);
     }
   };
 

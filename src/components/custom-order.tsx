@@ -3,8 +3,7 @@ import { FileUp, Trash2, UploadCloud } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { createCustomRequest } from "@/lib/requests.functions";
+import { createCustomRequest, uploadRequestFile } from "@/lib/requests.functions";
 
 const ACCEPTED = ".stl,.obj,.3mf,.step,.stp,.zip,image/*";
 const MAX_FILES = 8;
@@ -15,6 +14,7 @@ const formatSize = (bytes: number) =>
 
 export function CustomOrder() {
   const create = useServerFn(createCustomRequest);
+  const upload = useServerFn(uploadRequestFile);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -22,6 +22,7 @@ export function CustomOrder() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -58,17 +59,16 @@ export function CustomOrder() {
   const submit = async () => {
     if (files.length === 0) return setError("Sube al menos una foto o un archivo 3D para pedir la cotización.");
     if (!name.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) return setError("Escribe tu nombre y un correo válido.");
+    if (!termsAccepted) return setError("Debes aceptar los términos y la política de privacidad para continuar.");
     setSending(true);
     setError(null);
     try {
-      const folder = `requests/${crypto.randomUUID()}`;
       const uploaded = [];
       for (const file of files) {
-        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${folder}/${safe}`;
-        const { error: upErr } = await supabase.storage.from("custom-uploads").upload(path, file);
-        if (upErr) throw upErr;
-        uploaded.push({ name: file.name, path, size: file.size });
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await upload({ data: formData as any });
+        uploaded.push({ name: file.name, path: res.path, size: file.size });
       }
       const res = await create({ data: { name: name.trim(), email: email.trim(), notes: notes.trim().slice(0, 600), files: uploaded } });
       setCode(res.code);
@@ -143,6 +143,20 @@ export function CustomOrder() {
           placeholder="Cuéntanos tamaño, color, material o cantidad que necesitas."
           className="mt-4 w-full resize-none border border-border bg-background/60 px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
         />
+
+        <div className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            id="terms-custom"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-1 shrink-0 bg-transparent border-white/20 checked:bg-primary"
+          />
+          <label htmlFor="terms-custom" className="leading-5">
+            Acepto que SNAKELAB almacene mis datos para procesar la cotización según la{" "}
+            <Link to="/terminos" target="_blank" className="text-primary hover:underline">Ley de Habeas Data y Términos de Servicio</Link>.
+          </label>
+        </div>
 
         {error && <p className="mt-3 text-sm text-primary">{error}</p>}
 

@@ -1,117 +1,177 @@
-import astronautImage from "@/assets/product-astronaut.jpg";
-import dragonImage from "@/assets/product-dragon.jpg";
-import organizerImage from "@/assets/product-organizer.jpg";
-import planterImage from "@/assets/product-planter.jpg";
-
 export type Product = {
+  id: string;
   slug: string;
   name: string;
   category: string;
   price: number;
+  comparePrice?: number;
   shortDescription: string;
   description: string;
   material: string;
   dimensions: string;
   image: string;
+  images: string[];
+  colors?: string[];
+  sizes?: string[];
+  productionDays?: number;
 };
 
 export const products: Product[] = [
   {
-    slug: "dragon-articulado",
-    name: "Dragón Articulado Crystal",
-    category: "Coleccionables",
-    price: 45000,
-    shortDescription: "Dragón flexible articulado, uno de los modelos más vendidos del mundo maker.",
-    description:
-      "El clásico dragón articulado de los mercados de impresión 3D: cuerpo segmentado que se mueve con total fluidez, sin soportes ni ensamblaje. Impreso en PLA de alta calidad, ideal como pieza de escritorio o regalo.",
-    material: "PLA premium",
-    dimensions: "30 × 12 × 8 cm",
-    image: dragonImage,
+    id: "18",
+    slug: "flexi-animals",
+    name: "Flexi Animals",
+    category: "Tendencia",
+    price: 6000,
+    comparePrice: 10000,
+    shortDescription: "Colección de adorables animales articulados y flexibles.",
+    description: "**Flexi Animals** es una colección de adorables animales articulados y flexibles, pensados para jugar, coleccionar y regalar.",
+    material: "PLA",
+    dimensions: "Varios tamaños",
+    image: "/uploads/images/cover_image-1788283929064-462217625.jpg",
+    images: [
+      "/uploads/images/cover_image-1788283929064-462217625.jpg",
+      "/uploads/images/images-1788283479368-430813442.jpg"
+    ],
+    colors: ["#808080", "#c4a35a", "#1a1a2e", "#ff5f57"],
+    sizes: ["10cm", "15cm", "20cm", "30cm"],
+    productionDays: 4,
   },
   {
-    slug: "maceta-auto-riego",
-    name: "Maceta Auto Riego Geométrica",
-    category: "Hogar",
-    price: 35000,
-    shortDescription: "Maceta facetada con sistema de autorriego por mecha, muy popular en impresión 3D.",
-    description:
-      "Maceta de diseño geométrico con depósito de autorriego: el recipiente interior queda suspendido sobre la reserva de agua y la planta absorbe la humedad que necesita. Un modelo probado y reproducido por miles de impresoras en todo el mundo.",
-    material: "PLA resistente a humedad",
-    dimensions: "15 × 15 × 13 cm",
-    image: planterImage,
+    id: "19",
+    slug: "soporte-para-mandos-ps5-xbox",
+    name: "Soporte para Mandos PS5 - XBOX",
+    category: "Soportes para Controles",
+    price: 30000,
+    comparePrice: 60000,
+    shortDescription: "Soportes para mantener tus controles organizados y seguros.",
+    description: "**Soportes para Mandos PS5 y Xbox** diseñados para mantener tus controles organizados, seguros y siempre a la mano.",
+    material: "PLA",
+    dimensions: "Estándar",
+    image: "/uploads/images/cover_image-1789499680778-774100578.jpg",
+    images: [
+      "/uploads/images/cover_image-1789499680778-774100578.jpg",
+      "/uploads/images/images-1789499681569-472731152.jpg",
+      "/uploads/images/images-1789499681691-499192089.jpg",
+      "/uploads/images/images-1789499681779-919773570.jpg",
+      "/uploads/images/images-1789499681825-949358512.jpg",
+      "/uploads/images/images-1789499681898-288281121.jpg"
+    ],
+    colors: ["#e53935", "#1565c0", "#000000"],
+    sizes: ["Estándar"],
+    productionDays: 4,
   },
   {
-    slug: "organizador-hexagonal",
-    name: "Organizador Hexagonal Modular",
-    category: "Escritorio",
+    id: "20",
+    slug: "figuras-estilo-crochet",
+    name: "Figuras estilo crochet",
+    category: "Tendencia",
     price: 55000,
-    shortDescription: "Sistema modular de almacenamiento para escritorio, impreso pieza a pieza.",
-    description:
-      "Organizador de escritorio de celdas hexagonales apilables y conectables, inspirado en los sistemas modulares más vendidos en tiendas de impresión 3D. Configura tu propia distribución para herramientas, cables y accesorios.",
-    material: "PETG técnico",
-    dimensions: "30 × 10 × 12 cm",
-    image: organizerImage,
+    comparePrice: 70000,
+    shortDescription: "Hermosas figuras coleccionables impresas con textura estilo crochet.",
+    description: "Figuras con un acabado especial que imita el tejido de crochet, combinando la precisión de la impresión 3D con un look artesanal.",
+    material: "PLA",
+    dimensions: "12cm - 20cm",
+    image: "/uploads/images/cover_image-1789500289203-967354465.jpg",
+    images: [
+      "/uploads/images/cover_image-1789500289203-967354465.jpg",
+      "/uploads/images/images-1789500289315-194773776.jpg",
+      "/uploads/images/images-1789500289358-8930894.jpg",
+      "/uploads/images/images-1789500289415-99380394.jpg",
+      "/uploads/images/images-1789500289454-34106740.jpg",
+      "/uploads/images/images-1789500289499-595147197.jpg"
+    ],
+    colors: ["#fdd835", "#ffffff"],
+    sizes: ["12cm", "15cm", "20cm"],
+    productionDays: 3,
   },
   {
-    slug: "casco-astronauta",
-    name: "Figura Astronauta Lunar",
+    id: "21",
+    slug: "pato-verso",
+    name: "Pato Verso",
+    category: "Tendencia",
+    price: 70000,
+    comparePrice: 90000,
+    shortDescription: "Colección única de patos con estilos y temáticas diferentes.",
+    description: "Una serie de patos coleccionables únicos en su estilo, impresos en alta calidad para decorar cualquier espacio.",
+    material: "PLA, Resina",
+    dimensions: "10cm - 20cm",
+    image: "/uploads/images/images-1789501359680-519572941.jpg",
+    images: [
+      "/uploads/images/images-1789501359680-519572941.jpg",
+      "/uploads/images/images-1789501359543-643301763.jpg",
+      "/uploads/images/images-1789501359745-211558234.jpg",
+      "/uploads/images/images-1789501359772-793551024.jpg",
+      "/uploads/images/images-1789501359810-548197441.jpg"
+    ],
+    colors: ["#ff9800", "#000000", "#ffffff"],
+    sizes: ["10cm", "15cm", "20cm"],
+    productionDays: 4,
+  },
+  {
+    id: "22",
+    slug: "clickers",
+    name: "Clickers",
+    category: "Tendencia",
+    price: 35000,
+    comparePrice: 45000,
+    shortDescription: "Figuras inspiradas en la popular serie, con gran nivel de detalle.",
+    description: "Figuras hiperrealistas inspiradas en los infectados Clickers, con texturas y formas que replican los detalles escalofriantes.",
+    material: "PLA",
+    dimensions: "15cm - 40cm",
+    image: "/uploads/images/cover_image-1789499887434-656579980.jpg",
+    images: [
+      "/uploads/images/cover_image-1789499887434-656579980.jpg",
+      "/uploads/images/images-1789499887473-549896768.jpg",
+      "/uploads/images/images-1789499887524-547486980.jpg",
+      "/uploads/images/images-1789499887570-110345139.jpg"
+    ],
+    colors: ["#e53935", "#7b1fa2", "#00bcd4", "#4caf50", "#ff9800", "#212121"],
+    sizes: ["15cm", "25cm", "40cm"],
+    productionDays: 2,
+  },
+  {
+    id: "23",
+    slug: "porta-vasos-latas",
+    name: "Porta Vasos/Latas",
     category: "Decoración",
-    price: 60000,
-    shortDescription: "Figura decorativa de astronauta sobre la luna, decoración trending de impresión 3D.",
-    description:
-      "Figura decorativa de astronauta apoyado sobre una luna craterizada: uno de los diseños más replicados y vendidos en plataformas de modelos 3D. Acabado en dos tonos para resaltar el visor y la superficie lunar.",
-    material: "PLA seda y mate",
-    dimensions: "20 × 18 × 25 cm",
-    image: astronautImage,
+    price: 40000,
+    comparePrice: 55000,
+    shortDescription: "Portavasos temáticos y funcionales impresos en 3D.",
+    description: "Portavasos con diseños únicos para mantener tus bebidas seguras y darle estilo a tu mesa.",
+    material: "PLA",
+    dimensions: "10cm - 15cm",
+    image: "/uploads/images/cover_image-1789501887196-304273610.jpg",
+    images: [
+      "/uploads/images/cover_image-1789501887196-304273610.jpg",
+      "/uploads/images/images-1789501887248-917784353.jpg",
+      "/uploads/images/images-1789501887285-342221849.jpg",
+      "/uploads/images/images-1789501887352-364896044.jpg",
+      "/uploads/images/images-1789501887406-106717595.jpg"
+    ],
+    colors: ["#795548", "#4caf50", "#8d6e63"],
+    sizes: ["10cm", "15cm"],
+    productionDays: 3,
   },
   {
-    slug: "pulpo-articulado",
-    name: "Pulpo Articulado Fidget",
-    category: "Coleccionables",
-    price: 28000,
-    shortDescription: "Pulpo flexible con tentáculos móviles, un clásico anti-estrés impreso en una sola pieza.",
-    description:
-      "Pulpo articulado impreso en una sola pieza, sin ensamblaje: cada tentáculo se dobla y gira con suavidad. Uno de los modelos más descargados e impresos del mundo maker, ideal como juguete sensorial o regalo de escritorio.",
-    material: "PLA seda",
-    dimensions: "12 × 12 × 6 cm",
-    image: dragonImage,
-  },
-  {
-    slug: "lampara-espiral",
-    name: "Lámpara Espiral Vase Mode",
-    category: "Hogar",
-    price: 52000,
-    shortDescription: "Pantalla impresa en modo espiral que difunde la luz cálida en patrones suaves.",
-    description:
-      "Pantalla de lámpara impresa en vase mode: una sola pared continua que deja pasar la luz creando un patrón espiral en la pared. Compatible con portalámparas E27 y bombillas LED de bajo calor.",
-    material: "PLA translúcido",
-    dimensions: "16 × 16 × 24 cm",
-    image: planterImage,
-  },
-  {
-    slug: "soporte-audifonos",
-    name: "Soporte de Audífonos Minimal",
-    category: "Escritorio",
-    price: 32000,
-    shortDescription: "Soporte de escritorio para audífonos con base antideslizante y paso de cable.",
-    description:
-      "Soporte en voladizo para audífonos con base contrapesada, superficie de contacto ancha para no marcar la diadema y canal trasero para recoger el cable. Impreso en PETG para resistir el uso diario.",
-    material: "PETG técnico",
-    dimensions: "12 × 10 × 28 cm",
-    image: organizerImage,
-  },
-  {
-    slug: "portalapices-engranajes",
-    name: "Portalápices de Engranajes",
-    category: "Decoración",
-    price: 38000,
-    shortDescription: "Portalápices con engranajes funcionales que giran al mover la pieza superior.",
-    description:
-      "Portalápices con mecanismo de engranajes impresos y ensamblados en sitio: al girar el anillo superior todo el tren de engranajes se mueve. Pieza de exhibición para escritorios de ingeniería y diseño.",
-    material: "PLA mate bicolor",
-    dimensions: "11 × 11 × 14 cm",
-    image: astronautImage,
-  },
+    id: "24",
+    slug: "tu-diseno-personalizado",
+    name: "Tu Diseño Personalizado",
+    category: "Personalizados",
+    price: 50000,
+    comparePrice: undefined,
+    shortDescription: "Envíanos tu idea o archivo 3D y lo hacemos realidad.",
+    description: "Envíanos tu idea o archivo 3D y lo hacemos realidad. Cotización según complejidad y tamaño.",
+    material: "PLA, PETG, Resina, TPU",
+    dimensions: "Según diseño",
+    image: "/uploads/images/custom.jpg",
+    images: [
+      "/uploads/images/custom.jpg"
+    ],
+    colors: ["#9c27b0", "#00bcd4", "#ff5722", "#4caf50"],
+    sizes: ["Según diseño"],
+    productionDays: 7,
+  }
 ];
 
 export const formatPrice = (price: number) =>
