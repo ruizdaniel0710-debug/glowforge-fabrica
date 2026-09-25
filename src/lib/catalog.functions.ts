@@ -1,10 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs/promises";
-
-const dbPath = path.resolve(process.cwd(), "data", "snake-lab.db");
+import { dbRun, dbAll, dbGet, dbLastId, getDb } from "./db";
 
 // Esquema de producto
 const productSchema = z.object({
@@ -24,46 +22,38 @@ const productSchema = z.object({
 
 export const listProducts = createServerFn({ method: "GET" })
   .handler(async () => {
-    const db = new Database(dbPath);
-    try {
-      const rows = db.prepare(`
-        SELECT p.*, c.name as category_name
-        FROM products p
-        LEFT JOIN categories c ON p.category_id = c.id
-        ORDER BY p.id DESC
-      `).all() as any[];
+    const rows = await dbAll(`
+      SELECT p.*, c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      ORDER BY p.id DESC
+    `);
 
-      // Parse JSON fields
-      return rows.map(row => ({
-        ...row,
-        category: row.category_name || 'Sin Categoría',
-        shortDescription: row.description?.substring(0, 100) + (row.description?.length > 100 ? '...' : ''),
-        images: JSON.parse(row.images || '[]'),
-        colors: JSON.parse(row.colors || '[]'),
-        sizes: JSON.parse(row.sizes || '[]'),
-        material: JSON.parse(row.materials || '["PLA"]')[0] || "PLA",
-        image: JSON.parse(row.images || '[]')[0] || "",
-        comparePrice: row.compare_price,
-        productionDays: row.production_days,
-      }));
-    } finally {
-      db.close();
-    }
+    // Parse JSON fields
+    return rows.map(row => ({
+      ...row,
+      category: row.category_name || 'Sin Categoría',
+      shortDescription: row.description?.substring(0, 100) + (row.description?.length > 100 ? '...' : ''),
+      images: JSON.parse(row.images || '[]'),
+      colors: JSON.parse(row.colors || '[]'),
+      sizes: JSON.parse(row.sizes || '[]'),
+      material: JSON.parse(row.materials || '["PLA"]')[0] || "PLA",
+      image: JSON.parse(row.images || '[]')[0] || "",
+      comparePrice: row.compare_price,
+      productionDays: row.production_days,
+    }));
   });
 
 export const createProduct = createServerFn({ method: "POST" })
   .validator((data: unknown) => productSchema.parse(data))
   .handler(async ({ data }) => {
-    const db = new Database(dbPath);
     try {
-      const stmt = db.prepare(`
+      await dbRun(`
         INSERT INTO products (
           name, slug, description, price, compare_price, category_id,
           sizes, colors, materials, images, stock, production_days
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      
-      const result = stmt.run(
+      `, [
         data.name,
         data.slug,
         data.description || "",
@@ -76,30 +66,26 @@ export const createProduct = createServerFn({ method: "POST" })
         JSON.stringify(data.images || []),
         data.stock || 99,
         data.production_days || 3
-      );
+      ]);
       
-      return { success: true, id: result.lastInsertRowid };
+      const id = await dbLastId();
+      return { success: true, id };
     } catch (e: any) {
       throw new Error(e.message);
-    } finally {
-      db.close();
     }
   });
 
 export const updateProduct = createServerFn({ method: "POST" })
   .validator((data: unknown) => z.object({ id: z.number() }).and(productSchema).parse(data))
   .handler(async ({ data }) => {
-    const db = new Database(dbPath);
     try {
-      const stmt = db.prepare(`
+      await dbRun(`
         UPDATE products SET
           name = ?, slug = ?, description = ?, price = ?, compare_price = ?,
           category_id = ?, sizes = ?, colors = ?, materials = ?, images = ?,
           stock = ?, production_days = ?
         WHERE id = ?
-      `);
-      
-      stmt.run(
+      `, [
         data.name,
         data.slug,
         data.description || "",
@@ -113,59 +99,49 @@ export const updateProduct = createServerFn({ method: "POST" })
         data.stock || 99,
         data.production_days || 3,
         data.id
-      );
+      ]);
       
       return { success: true };
     } catch (e: any) {
       throw new Error(e.message);
-    } finally {
-      db.close();
     }
   });
 
 export const deleteProduct = createServerFn({ method: "POST" })
   .validator((data: unknown) => z.object({ id: z.number() }).parse(data))
   .handler(async ({ data }) => {
-    const db = new Database(dbPath);
     try {
-      db.prepare('DELETE FROM products WHERE id = ?').run(data.id);
+      await dbRun('DELETE FROM products WHERE id = ?', [data.id]);
       return { success: true };
     } catch (e: any) {
       throw new Error(e.message);
-    } finally {
-      db.close();
     }
   });
 
 export const getProduct = createServerFn({ method: "GET" })
   .validator((data: unknown) => z.object({ slug: z.string() }).parse(data))
   .handler(async ({ data }) => {
-    const db = new Database(dbPath);
-    try {
-      const row = db.prepare(`
-        SELECT p.*, c.name as category_name
-        FROM products p
-        LEFT JOIN categories c ON p.category_id = c.id
-        WHERE p.slug = ?
-      `).get(data.slug) as any;
+    const row = await dbGet(`
+      SELECT p.*, c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.slug = ?
+    `, [data.slug]);
 
-      if (!row) return null;
+    if (!row) return null;
 
-      return {
-        ...row,
-        category: row.category_name || 'Sin Categoría',
-        shortDescription: row.description?.substring(0, 100) + (row.description?.length > 100 ? '...' : ''),
-        images: JSON.parse(row.images || '[]'),
-        colors: JSON.parse(row.colors || '[]'),
-        sizes: JSON.parse(row.sizes || '[]'),
-        material: JSON.parse(row.materials || '["PLA"]')[0] || "PLA",
-        image: JSON.parse(row.images || '[]')[0] || "",
-        comparePrice: row.compare_price,
-        productionDays: row.production_days,
-      };
-    } finally {
-      db.close();
-    }
+    return {
+      ...row,
+      category: row.category_name || 'Sin Categoría',
+      shortDescription: row.description?.substring(0, 100) + (row.description?.length > 100 ? '...' : ''),
+      images: JSON.parse(row.images || '[]'),
+      colors: JSON.parse(row.colors || '[]'),
+      sizes: JSON.parse(row.sizes || '[]'),
+      material: JSON.parse(row.materials || '["PLA"]')[0] || "PLA",
+      image: JSON.parse(row.images || '[]')[0] || "",
+      comparePrice: row.compare_price,
+      productionDays: row.production_days,
+    };
   });
 
 export const uploadImage = createServerFn({ method: "POST" })
