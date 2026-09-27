@@ -190,10 +190,25 @@ const AccordionGallery = ({
     }
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el) {
+      const panel = el.closest(".ag-panel");
+      if (panel && panel.parentNode === rootRef.current) {
+        const index = Array.from(panel.parentNode.children).indexOf(panel);
+        if (index >= 0 && index !== active) {
+          setActive(index);
+        }
+      }
+    }
+  };
+
   return (
     <div
       ref={rootRef}
       className={`accordion-gallery${vertical ? " accordion-gallery--vertical" : ""} ${className}`}
+      onTouchMove={handleTouchMove}
       style={{
         height: `${height}px`,
         ["--ag-accent" as string]: accentColor,
@@ -218,6 +233,7 @@ const AccordionGallery = ({
             href={item.link || undefined}
             onClick={(e: React.MouseEvent) => handleClick(i, e)}
             onMouseEnter={() => handleEnter(i)}
+            onTouchStart={() => handleEnter(i)}
             onFocus={() => setActive(i)}
             onKeyDown={(e: React.KeyboardEvent) => handleKeyDown(i, e)}
             role="listitem"
