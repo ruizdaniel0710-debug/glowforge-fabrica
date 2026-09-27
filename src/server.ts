@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -47,6 +49,29 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      
+      // Serve files from the persistent data volume
+      if (url.pathname.startsWith("/uploads/")) {
+        try {
+          const filePath = path.join(process.cwd(), "data", url.pathname);
+          const buffer = await fs.readFile(filePath);
+          const ext = path.extname(filePath).toLowerCase();
+          const mimeTypes: Record<string, string> = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".webp": "image/webp",
+            ".glb": "model/gltf-binary",
+            ".gltf": "model/gltf+json"
+          };
+          const contentType = mimeTypes[ext] || "application/octet-stream";
+          return new Response(buffer, { headers: { "Content-Type": contentType } });
+        } catch (err) {
+          // Si no se encuentra en el volumen, dejar que siga (por si está en la build estática)
+        }
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

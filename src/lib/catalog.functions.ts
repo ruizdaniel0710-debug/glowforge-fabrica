@@ -180,7 +180,12 @@ export const uploadImage = createServerFn({ method: "POST" })
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const filename = `img-${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const uploadPath = path.resolve(process.cwd(), "public", "uploads", "images", filename);
+    
+    // Save to the persistent data volume instead of the ephemeral public folder
+    const dir = path.resolve(process.cwd(), "data", "uploads", "images");
+    await fs.mkdir(dir, { recursive: true });
+    const uploadPath = path.resolve(dir, filename);
+    
     await fs.writeFile(uploadPath, buffer);
     return { url: `/uploads/images/${filename}` };
   });
