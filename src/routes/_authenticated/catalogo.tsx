@@ -54,6 +54,9 @@ function CatalogoAdminPage() {
       production_days: parseInt(formData.get("production_days") as string) || 3,
       description: formData.get("description") as string,
       images: images,
+      sizes: editingProduct ? editingProduct.sizes : [],
+      colors: editingProduct ? editingProduct.colors : [],
+      materials: editingProduct ? editingProduct.materials : ["PLA"],
     };
     
     if (editingProduct) {
