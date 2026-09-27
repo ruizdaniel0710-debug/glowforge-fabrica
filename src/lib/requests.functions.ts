@@ -3,6 +3,9 @@ import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { dbRun, dbAll, dbGet } from "./db";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const REQUEST_STATUSES = ["recibida", "en revisión", "cotizada", "aprobada", "en impresión", "enviada", "cancelada"] as const;
 
@@ -32,6 +35,22 @@ export const createCustomRequest = createServerFn({ method: "POST" })
         INSERT INTO custom_requests (code, customer_name, email, notes, files)
         VALUES (?, ?, ?, ?, ?)
       `, [code, data.name, data.email.toLowerCase(), data.notes, JSON.stringify(data.files)]);
+
+      resend.emails.send({
+        from: 'Snakelab <onboarding@resend.dev>',
+        to: data.email.toLowerCase(),
+        subject: `Cotización Recibida - Código ${code}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #7c3aed;">¡Hola, ${data.name}!</h2>
+            <p>Hemos recibido tu solicitud de cotización correctamente.</p>
+            <p>Tu código de seguimiento es: <strong>${code}</strong></p>
+            <p>Puedes revisar el estado de tu cotización en nuestra página de <a href="https://snakelab.site/seguimiento">Seguimiento</a>.</p>
+            <p>Pronto uno de nuestros expertos revisará los archivos y te enviará el valor final. ¡Gracias por elegir Snakelab!</p>
+          </div>
+        `
+      }).catch(console.error);
+
       return { code };
     } catch (e: any) {
       console.error(e);

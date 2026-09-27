@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { dbRun, dbAll, dbGet, dbLastId } from "./db";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Validate the input from the checkout form
 const checkoutSchema = z.object({
@@ -52,6 +55,24 @@ export const createOrder = createServerFn({ method: "POST" })
       ]);
 
       const orderId = await dbLastId();
+
+      resend.emails.send({
+        from: 'Snakelab <onboarding@resend.dev>',
+        to: data.customer.email.toLowerCase(),
+        subject: `Confirmación de Pedido - #${orderCode}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #7c3aed;">¡Gracias por tu compra, ${data.customer.name}!</h2>
+            <p>Hemos recibido tu pedido correctamente. Estamos preparando todo para que llegue pronto.</p>
+            <p>Tu código de pedido es: <strong>${orderCode}</strong></p>
+            <p>Puedes rastrear el estado de tu pedido en cualquier momento ingresando tu correo y este código en nuestra página de <a href="https://snakelab.site/seguimiento">Seguimiento</a>.</p>
+            <br/>
+            <p>Si elegiste un método de pago manual (Nequi/Bancolombia), recuerda enviarnos el comprobante a nuestro WhatsApp citando tu número de pedido.</p>
+            <p>¡Gracias por apoyar la impresión 3D local!</p>
+          </div>
+        `
+      }).catch(console.error);
+
       return { success: true, orderCode, orderId };
     } catch (error: any) {
       console.error("Order creation error:", error);
