@@ -146,9 +146,18 @@ export const getProduct = createServerFn({ method: "GET" })
 
 export const uploadImage = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
-    if (!(data instanceof FormData)) throw new Error("Expected FormData");
+    if (!(data instanceof FormData)) {
+      throw new Error("Expected FormData");
+    }
     const file = data.get("file");
-    if (!(file instanceof File)) throw new Error("Expected File");
+    
+    // En Node/Nitro, a veces los archivos se parsean como Blob con propiedad name
+    if (!file || typeof file === "string" || !(file instanceof Blob)) {
+      throw new Error("Expected File or Blob");
+    }
+    
+    // Obtener nombre (depende de si es File o Blob con name)
+    const fileName = (file as any).name || "upload.png";
     
     // 1. Validación de tamaño (Máximo 5MB para imágenes de catálogo)
     const MAX_SIZE = 5 * 1024 * 1024;
@@ -157,20 +166,20 @@ export const uploadImage = createServerFn({ method: "POST" })
     }
 
     // 2. Validación estricta de extensión para evitar scripts maliciosos
-    const ext = file.name.split('.').pop()?.toLowerCase() || "";
+    const ext = fileName.split('.').pop()?.toLowerCase() || "";
     const allowedExtensions = ["png", "jpg", "jpeg", "webp"];
     
     if (!allowedExtensions.includes(ext)) {
       throw new Error(`Tipo de archivo no permitido: .${ext}. Solo se permiten imágenes.`);
     }
 
-    return { file };
+    return { file, fileName };
   })
   .handler(async ({ data }) => {
-    const { file } = data;
+    const { file, fileName } = data;
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const filename = `img-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const filename = `img-${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const uploadPath = path.resolve(process.cwd(), "public", "uploads", "images", filename);
     await fs.writeFile(uploadPath, buffer);
     return { url: `/uploads/images/${filename}` };
