@@ -39,13 +39,21 @@ function CatalogoAdminPage() {
   };
 
   const handleSave = async (formData: FormData) => {
+    let images: string[] = [];
+    try {
+      images = JSON.parse(formData.get("images") as string || "[]");
+    } catch {}
+
     const data = {
       name: formData.get("name") as string,
       slug: (formData.get("name") as string).toLowerCase().replace(/ /g, '-'),
       category_id: parseInt(formData.get("category_id") as string) || null,
       price: parseInt(formData.get("price") as string) || 0,
+      compare_price: parseInt(formData.get("compare_price") as string) || null,
       stock: parseInt(formData.get("stock") as string) || 0,
+      production_days: parseInt(formData.get("production_days") as string) || 3,
       description: formData.get("description") as string,
+      images: images,
     };
     
     if (editingProduct) {
