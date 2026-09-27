@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { createCustomRequest, uploadRequestFile } from "@/lib/requests.functions";
 
 const ACCEPTED = ".stl,.obj,.3mf,.step,.stp,.zip,image/*";
-const MAX_FILES = 8;
+const MAX_FILES = 3;
 const MAX_SIZE = 25 * 1024 * 1024;
 
 const formatSize = (bytes: number) =>
@@ -96,7 +96,7 @@ export function CustomOrder() {
         <ul className="mt-6 space-y-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
           <li>01 / Revisión del modelo sin costo</li>
           <li>02 / Respuesta en menos de 24 horas</li>
-          <li>03 / Hasta 8 archivos, 25 MB cada uno</li>
+          <li>03 / Hasta 3 archivos, 25 MB cada uno</li>
         </ul>
       </div>
 

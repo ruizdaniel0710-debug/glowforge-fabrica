@@ -20,6 +20,7 @@ export const Route = createFileRoute("/producto/$slug")({
       { title }, { name: "description", content: description },
       { property: "og:title", content: title }, { property: "og:description", content: description },
       { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+      ...(loaderData?.image ? [{ property: "og:image", content: loaderData.image }, { name: "twitter:image", content: loaderData.image }] : []),
     ] };
   },
   component: ProductPage,
@@ -154,8 +155,8 @@ function ProductPage() {
 
             {/* Specs */}
             <dl className="mt-8 grid grid-cols-2 gap-4 border-y border-border py-6">
-              <div><dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Material</dt><dd className="mt-2 text-sm font-semibold">{product.material}</dd></div>
-              <div><dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Dimensiones</dt><dd className="mt-2 text-sm font-semibold">{product.dimensions}</dd></div>
+              <div><dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Material</dt><dd className="mt-2 text-sm font-semibold">{product.material || 'PLA'}</dd></div>
+              <div><dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Dimensiones</dt><dd className="mt-2 text-sm font-semibold">{product.dimensions || (product.sizes?.length ? product.sizes.join(' / ') : 'Estándar')}</dd></div>
               {product.productionDays && (
                 <div><dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Producción</dt><dd className="mt-2 text-sm font-semibold">{product.productionDays} días hábiles</dd></div>
               )}

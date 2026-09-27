@@ -192,10 +192,10 @@ function SiteFooter() {
           <div>
             <h3 className="font-display font-bold text-sm uppercase tracking-wider mb-4">Información</h3>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><span className="hover:text-primary transition-colors cursor-pointer">Política de Envíos</span></li>
-              <li><span className="hover:text-primary transition-colors cursor-pointer">Preguntas Frecuentes</span></li>
-              <li><span className="hover:text-primary transition-colors cursor-pointer">Términos y Condiciones</span></li>
-              <li><span className="hover:text-primary transition-colors cursor-pointer">Privacidad</span></li>
+              <li><Link to="/politicas/envios" className="hover:text-primary transition-colors cursor-pointer">Política de Envíos</Link></li>
+              <li><Link to="/politicas/faq" className="hover:text-primary transition-colors cursor-pointer">Preguntas Frecuentes</Link></li>
+              <li><Link to="/politicas/terminos" className="hover:text-primary transition-colors cursor-pointer">Términos y Condiciones</Link></li>
+              <li><Link to="/politicas/privacidad" className="hover:text-primary transition-colors cursor-pointer">Privacidad</Link></li>
             </ul>
           </div>
 

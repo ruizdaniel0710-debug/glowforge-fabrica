@@ -33,7 +33,7 @@ export const listProducts = createServerFn({ method: "GET" })
     return rows.map(row => ({
       ...row,
       category: row.category_name || 'Sin Categoría',
-      shortDescription: row.description?.substring(0, 100) + (row.description?.length > 100 ? '...' : ''),
+      shortDescription: row.description?.replace(/[*_#~]/g, '').substring(0, 100) + ((row.description?.replace(/[*_#~]/g, '').length || 0) > 100 ? '...' : ''),
       images: JSON.parse(row.images || '[]'),
       colors: JSON.parse(row.colors || '[]'),
       sizes: JSON.parse(row.sizes || '[]'),
@@ -134,7 +134,7 @@ export const getProduct = createServerFn({ method: "GET" })
     return {
       ...row,
       category: row.category_name || 'Sin Categoría',
-      shortDescription: row.description?.substring(0, 100) + (row.description?.length > 100 ? '...' : ''),
+      shortDescription: row.description?.replace(/[*_#~]/g, '').substring(0, 100) + ((row.description?.replace(/[*_#~]/g, '').length || 0) > 100 ? '...' : ''),
       images: JSON.parse(row.images || '[]'),
       colors: JSON.parse(row.colors || '[]'),
       sizes: JSON.parse(row.sizes || '[]'),

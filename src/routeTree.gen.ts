@@ -20,6 +20,10 @@ import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
+import { Route as PoliticasEnviosRouteImport } from './routes/politicas/envios'
+import { Route as PoliticasFaqRouteImport } from './routes/politicas/faq'
+import { Route as PoliticasPrivacidadRouteImport } from './routes/politicas/privacidad'
+import { Route as PoliticasTerminosRouteImport } from './routes/politicas/terminos'
 import { Route as ProductoSlugRouteImport } from './routes/producto.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +81,26 @@ const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   path: '/pedidos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const PoliticasEnviosRoute = PoliticasEnviosRouteImport.update({
+  id: '/politicas/envios',
+  path: '/politicas/envios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticasFaqRoute = PoliticasFaqRouteImport.update({
+  id: '/politicas/faq',
+  path: '/politicas/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticasPrivacidadRoute = PoliticasPrivacidadRouteImport.update({
+  id: '/politicas/privacidad',
+  path: '/politicas/privacidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticasTerminosRoute = PoliticasTerminosRouteImport.update({
+  id: '/politicas/terminos',
+  path: '/politicas/terminos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductoSlugRoute = ProductoSlugRouteImport.update({
   id: '/producto/$slug',
   path: '/producto/$slug',
@@ -94,6 +118,10 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/politicas/envios': typeof PoliticasEnviosRoute
+  '/politicas/faq': typeof PoliticasFaqRoute
+  '/politicas/privacidad': typeof PoliticasPrivacidadRoute
+  '/politicas/terminos': typeof PoliticasTerminosRoute
   '/producto/$slug': typeof ProductoSlugRoute
 }
 export interface FileRoutesByTo {
@@ -107,6 +135,10 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/politicas/envios': typeof PoliticasEnviosRoute
+  '/politicas/faq': typeof PoliticasFaqRoute
+  '/politicas/privacidad': typeof PoliticasPrivacidadRoute
+  '/politicas/terminos': typeof PoliticasTerminosRoute
   '/producto/$slug': typeof ProductoSlugRoute
 }
 export interface FileRoutesById {
@@ -122,6 +154,10 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/politicas/envios': typeof PoliticasEnviosRoute
+  '/politicas/faq': typeof PoliticasFaqRoute
+  '/politicas/privacidad': typeof PoliticasPrivacidadRoute
+  '/politicas/terminos': typeof PoliticasTerminosRoute
   '/producto/$slug': typeof ProductoSlugRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +173,10 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/configuracion'
     | '/pedidos'
+    | '/politicas/envios'
+    | '/politicas/faq'
+    | '/politicas/privacidad'
+    | '/politicas/terminos'
     | '/producto/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -150,6 +190,10 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/configuracion'
     | '/pedidos'
+    | '/politicas/envios'
+    | '/politicas/faq'
+    | '/politicas/privacidad'
+    | '/politicas/terminos'
     | '/producto/$slug'
   id:
     | '__root__'
@@ -164,6 +208,10 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/configuracion'
     | '/_authenticated/pedidos'
+    | '/politicas/envios'
+    | '/politicas/faq'
+    | '/politicas/privacidad'
+    | '/politicas/terminos'
     | '/producto/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -173,6 +221,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   SeguimientoRoute: typeof SeguimientoRoute
   TerminosRoute: typeof TerminosRoute
+  PoliticasEnviosRoute: typeof PoliticasEnviosRoute
+  PoliticasFaqRoute: typeof PoliticasFaqRoute
+  PoliticasPrivacidadRoute: typeof PoliticasPrivacidadRoute
+  PoliticasTerminosRoute: typeof PoliticasTerminosRoute
   ProductoSlugRoute: typeof ProductoSlugRoute
 }
 
@@ -255,6 +307,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/politicas/envios': {
+      id: '/politicas/envios'
+      path: '/politicas/envios'
+      fullPath: '/politicas/envios'
+      preLoaderRoute: typeof PoliticasEnviosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politicas/faq': {
+      id: '/politicas/faq'
+      path: '/politicas/faq'
+      fullPath: '/politicas/faq'
+      preLoaderRoute: typeof PoliticasFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politicas/privacidad': {
+      id: '/politicas/privacidad'
+      path: '/politicas/privacidad'
+      fullPath: '/politicas/privacidad'
+      preLoaderRoute: typeof PoliticasPrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politicas/terminos': {
+      id: '/politicas/terminos'
+      path: '/politicas/terminos'
+      fullPath: '/politicas/terminos'
+      preLoaderRoute: typeof PoliticasTerminosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/producto/$slug': {
       id: '/producto/$slug'
       path: '/producto/$slug'
@@ -292,6 +372,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   SeguimientoRoute: SeguimientoRoute,
   TerminosRoute: TerminosRoute,
+  PoliticasEnviosRoute: PoliticasEnviosRoute,
+  PoliticasFaqRoute: PoliticasFaqRoute,
+  PoliticasPrivacidadRoute: PoliticasPrivacidadRoute,
+  PoliticasTerminosRoute: PoliticasTerminosRoute,
   ProductoSlugRoute: ProductoSlugRoute,
 }
 export const routeTree = rootRouteImport
