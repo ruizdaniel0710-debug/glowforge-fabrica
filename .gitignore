@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Base de datos local e imágenes subidas (para que no sobreescriban producción al desplegar)
+data/
+public/uploads/
