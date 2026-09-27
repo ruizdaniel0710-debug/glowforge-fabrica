@@ -30,14 +30,14 @@ export function StoreShell({ children }: { children: ReactNode }) {
 
 function Brand() {
   return (
-    <Link to="/" className="group flex items-center gap-2.5" aria-label="SNAKELAB, inicio">
+    <Link to="/" className="group flex items-center gap-3" aria-label="SNAKELAB, inicio">
       <img
-        src="/imagens/snakelab-icon.png"
+        src="/logo-white.png"
         alt=""
         aria-hidden="true"
-        className="h-9 w-auto object-contain"
+        className="h-10 w-auto object-contain"
       />
-      <span className="font-display text-xl font-bold tracking-[0.12em] text-foreground">SNAKELAB</span>
+      <span className="font-display text-2xl font-bold tracking-[0.12em] text-foreground">SNAKELAB</span>
     </Link>
   );
 }
@@ -160,9 +160,9 @@ function SiteFooter() {
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2.5 mb-4">
-              <img src="/imagens/snakelab-icon.png" alt="" className="h-8 w-auto object-contain" />
-              <span className="font-display text-lg font-bold tracking-[0.12em]">SNAKELAB</span>
+            <Link to="/" className="flex items-center gap-3 mb-4">
+              <img src="/logo-white.png" alt="" className="h-10 w-auto object-contain" />
+              <span className="font-display text-2xl font-bold tracking-[0.12em]">SNAKELAB</span>
             </Link>
             <p className="text-sm leading-6 text-muted-foreground">
               Laboratorio de impresión 3D en Bogotá. Diseñamos y fabricamos objetos únicos capa por capa.
