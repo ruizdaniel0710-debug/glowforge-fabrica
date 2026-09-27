@@ -37,7 +37,7 @@ export const createCustomRequest = createServerFn({ method: "POST" })
       `, [code, data.name, data.email.toLowerCase(), data.notes, JSON.stringify(data.files)]);
 
       resend.emails.send({
-        from: 'Snakelab <onboarding@resend.dev>',
+        from: 'SNAKELAB <ventas@snakelab.site>',
         to: data.email.toLowerCase(),
         subject: `Cotización Recibida - Código ${code}`,
         html: `

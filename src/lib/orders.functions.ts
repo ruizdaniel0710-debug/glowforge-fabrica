@@ -57,7 +57,7 @@ export const createOrder = createServerFn({ method: "POST" })
       const orderId = await dbLastId();
 
       resend.emails.send({
-        from: 'Snakelab <onboarding@resend.dev>',
+        from: 'SNAKELAB <ventas@snakelab.site>',
         to: data.customer.email.toLowerCase(),
         subject: `Confirmación de Pedido - #${orderCode}`,
         html: `
