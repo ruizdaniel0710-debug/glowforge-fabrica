@@ -2,18 +2,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { formatPrice } from "@/lib/products";
 import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2 } from "lucide-react";
-import { listProducts, deleteProduct, createProduct, updateProduct, uploadImage } from "@/lib/catalog.functions";
+import { listProducts, deleteProduct, createProduct, updateProduct, uploadImage, listCategories } from "@/lib/catalog.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useRouter } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
-  loader: () => listProducts(),
+  loader: async () => {
+    const [products, categories] = await Promise.all([
+      listProducts(),
+      listCategories()
+    ]);
+    return { products, categories };
+  },
   component: CatalogoAdminPage,
 });
 
 function CatalogoAdminPage() {
   const router = useRouter();
-  const initialProducts = Route.useLoaderData();
+  const { products: initialProducts, categories } = Route.useLoaderData();
   const delProd = useServerFn(deleteProduct);
   const addProd = useServerFn(createProduct);
   const updProd = useServerFn(updateProduct);
@@ -126,13 +132,18 @@ function CatalogoAdminPage() {
       </div>
 
       {isModalOpen && (
-        <ProductModal product={editingProduct} onClose={() => setIsModalOpen(false)} onSave={handleSave} />
+        <ProductModal 
+          product={editingProduct} 
+          categories={categories}
+          onClose={() => setIsModalOpen(false)} 
+          onSave={handleSave} 
+        />
       )}
     </div>
   );
 }
 
-function ProductModal({ product, onClose, onSave }: { product: any, onClose: () => void, onSave: (data: FormData) => void }) {
+function ProductModal({ product, categories, onClose, onSave }: { product: any, categories: any[], onClose: () => void, onSave: (data: FormData) => void }) {
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [isUploading, setIsUploading] = useState(false);
   const uploadFn = useServerFn(uploadImage);
@@ -201,13 +212,10 @@ function ProductModal({ product, onClose, onSave }: { product: any, onClose: () 
             </div>
             <div className="space-y-2">
               <label className="text-gray-300 font-medium">Categoría *</label>
-              <select name="category_id" defaultValue={product?.category_id || 1} className="w-full bg-[#111] border border-white/10 rounded-lg p-3 text-white outline-none focus:border-primary appearance-none">
-                <option value="1">Figuras Gaming</option>
-                <option value="2">Anime</option>
-                <option value="3">Soportes para Controles</option>
-                <option value="4">Decoración</option>
-                <option value="5">Personalizados</option>
-                <option value="6">Tendencia</option>
+              <select name="category_id" defaultValue={product?.category_id || (categories.length > 0 ? categories[0].id : 1)} className="w-full bg-[#111] border border-white/10 rounded-lg p-3 text-white outline-none focus:border-primary appearance-none">
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
             </div>
           </div>

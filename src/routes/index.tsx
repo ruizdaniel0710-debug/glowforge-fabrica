@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight, Box, Layers3, Ruler } from "lucide-react";
 import heroPrintingVideo from "@/assets/snakelab-hero-printing.mp4";
@@ -28,6 +29,12 @@ export const Route = createFileRoute("/")({
 // IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   const products = Route.useLoaderData();
+  const [activeCategory, setActiveCategory] = useState("Todos");
+  
+  const categories = ["Todos", ...Array.from(new Set(products.map(p => p.category)))];
+  const filteredProducts = activeCategory === "Todos" 
+    ? products 
+    : products.filter(p => p.category === activeCategory);
 
   return (
     <main className="relative">
@@ -89,8 +96,26 @@ function Index() {
             <div><p className="eyebrow mb-4">Serie 001 — Catálogo</p><h2 className="font-display text-5xl font-bold uppercase md:text-7xl">Piezas <span className="text-muted-foreground">destacadas</span></h2></div>
             <p className="max-w-sm text-sm leading-6 text-muted-foreground">Colecciones pequeñas, acabados precisos y objetos pensados para durar más allá de la tendencia.</p>
           </div>
+          
+          {/* Categorías (Filtros) */}
+          <div className="mb-10 flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                  activeCategory === cat 
+                  ? "bg-white text-black border-white" 
+                  : "bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product, index) => <ProductCard key={product.slug} product={product} index={index} />)}
+            {filteredProducts.map((product, index) => <ProductCard key={product.slug} product={product} index={index} />)}
           </div>
         </div>
       </section>

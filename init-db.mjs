@@ -225,4 +225,53 @@ if (cnt === 0) {
 
 const data = db.export();
 fs.writeFileSync(dbPath, Buffer.from(data));
-console.log("Database initialized and saved to", dbPath);
+
+// MIGRATION: Migrate old categories to new scalable categories
+const newCategories = [
+  "Setup Gamer & Accesorios",
+  "Coleccionables & Figuras",
+  "Deco Hogar & Jardín",
+  "Soportes y Organización",
+  "Personalizados"
+];
+
+const newCatIds = {};
+for (const cat of newCategories) {
+  db.run("INSERT OR IGNORE INTO categories (name) VALUES (?)", [cat]);
+  const s = db.prepare("SELECT id FROM categories WHERE name = ?");
+  s.bind([cat]);
+  s.step();
+  newCatIds[cat] = s.getAsObject().id;
+  s.free();
+}
+
+const mappings = {
+  "Figuras Gaming": "Coleccionables & Figuras",
+  "Anime": "Coleccionables & Figuras",
+  "Soportes para Controles": "Soportes y Organización",
+  "Decoración": "Deco Hogar & Jardín",
+  "Tendencia": "Coleccionables & Figuras",
+  "Setup Gamer": "Setup Gamer & Accesorios",
+  "Coleccionables": "Coleccionables & Figuras",
+  "Deco Hogar": "Deco Hogar & Jardín",
+  "Personalizados": "Personalizados"
+};
+
+const res = db.exec("SELECT id, name FROM categories");
+if (res.length > 0) {
+  const oldCats = res[0].values;
+  for (const [id, name] of oldCats) {
+    const mappedName = mappings[name];
+    if (mappedName && newCatIds[mappedName] && newCatIds[mappedName] !== id) {
+      db.run("UPDATE products SET category_id = ? WHERE category_id = ?", [newCatIds[mappedName], id]);
+    }
+  }
+}
+
+const usedIds = Object.values(newCatIds).join(',');
+db.run(`DELETE FROM categories WHERE id NOT IN (${usedIds})`);
+
+const migratedData = db.export();
+fs.writeFileSync(dbPath, Buffer.from(migratedData));
+
+console.log("Database initialized/migrated and saved to", dbPath);

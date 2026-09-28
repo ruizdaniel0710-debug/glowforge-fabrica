@@ -72,7 +72,7 @@ function ProductPage() {
             </div>
 
             {/* Accordion Gallery - only this product's images */}
-            <div className="cursor-zoom-in">
+            <div className="relative cursor-zoom-in overflow-hidden rounded-xl bg-card/50">
               <AccordionGallery
                 items={galleryItems}
                 defaultIndex={0}

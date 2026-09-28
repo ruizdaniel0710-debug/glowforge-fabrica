@@ -45,6 +45,11 @@ export const listProducts = createServerFn({ method: "GET" })
     }));
   });
 
+export const listCategories = createServerFn({ method: "GET" })
+  .handler(async () => {
+    return await dbAll("SELECT id, name FROM categories ORDER BY name ASC");
+  });
+
 export const createProduct = createServerFn({ method: "POST" })
   .validator((data: unknown) => productSchema.parse(data))
   .handler(async ({ data }) => {
