@@ -14,6 +14,7 @@ export type Product = {
   colors?: string[];
   sizes?: string[];
   productionDays?: number;
+  variants?: { image: string, name: string, description: string, price: number }[];
 };
 
 export const products: Product[] = [

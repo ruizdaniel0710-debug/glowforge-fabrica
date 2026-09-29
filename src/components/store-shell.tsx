@@ -205,14 +205,13 @@ function SiteFooter() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li>📍 Bogotá, Colombia</li>
               <li>📱 +57 321 440 3628</li>
-              <li>✉️ darinru0710@gmail.com</li>
+              <li>✉️ snakelab.info@gmail.com</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} SNAKELAB. Todos los derechos reservados.</p>
-          <p className="text-xs text-muted-foreground">Hecho con 🐍 en Colombia</p>
         </div>
       </div>
     </footer>
@@ -253,22 +252,34 @@ function CartDrawer() {
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map(({ product, quantity }) => (
-                <div key={product.slug} className="grid grid-cols-[88px_1fr] gap-4 border-b border-border pb-4">
-                  <img src={product.image} alt={product.name} className="aspect-square rounded-sm object-cover" width={1024} height={1024} />
-                  <div className="min-w-0">
-                    <div className="flex justify-between gap-3">
-                      <div><p className="font-display font-semibold">{product.name}</p><p className="mt-1 text-sm text-primary">{formatPrice(product.price)}</p></div>
-                      <Button variant="ghost" size="icon" onClick={() => removeItem(product.slug)} aria-label={`Eliminar ${product.name}`}><Trash2 /></Button>
-                    </div>
-                    <div className="mt-3 flex w-fit items-center border border-border">
-                      <Button variant="ghost" size="icon" onClick={() => changeQuantity(product.slug, -1)} aria-label="Reducir cantidad"><Minus /></Button>
-                      <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
-                      <Button variant="ghost" size="icon" onClick={() => changeQuantity(product.slug, 1)} aria-label="Aumentar cantidad"><Plus /></Button>
+              {items.map((item, index) => {
+                const { product, quantity, color, size, files } = item;
+                return (
+                  <div key={`${product.slug}-${index}`} className="grid grid-cols-[88px_1fr] gap-4 border-b border-border pb-4">
+                    <img src={product.image} alt={product.name} className="aspect-square rounded-sm object-cover" width={1024} height={1024} />
+                    <div className="min-w-0">
+                      <div className="flex justify-between gap-3">
+                        <div>
+                          <p className="font-display font-semibold leading-tight">{product.name}</p>
+                          {(color || size) && (
+                            <p className="mt-1 text-xs text-muted-foreground">{color}{color && size && " / "}{size}</p>
+                          )}
+                          {files && files.length > 0 && (
+                            <p className="mt-1 text-xs text-muted-foreground">{files.length} archivo(s) adjunto(s)</p>
+                          )}
+                          <p className="mt-1 text-sm text-primary">{formatPrice(product.price)}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => removeItem(index)} aria-label={`Eliminar ${product.name}`}><Trash2 className="size-4" /></Button>
+                      </div>
+                      <div className="mt-3 flex w-fit items-center border border-border">
+                        <Button variant="ghost" size="icon" className="size-7" onClick={() => changeQuantity(index, -1)} aria-label="Reducir cantidad"><Minus className="size-3" /></Button>
+                        <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
+                        <Button variant="ghost" size="icon" className="size-7" onClick={() => changeQuantity(index, 1)} aria-label="Aumentar cantidad"><Plus className="size-3" /></Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

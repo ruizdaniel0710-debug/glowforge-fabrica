@@ -30,6 +30,8 @@ type AccordionGalleryProps = {
   grayscale?: boolean;
   className?: string;
   onItemClick?: (index: number) => void;
+  onItemHover?: (index: number) => void;
+  onItemLeave?: () => void;
 };
 
 const AccordionGallery = ({
@@ -53,6 +55,8 @@ const AccordionGallery = ({
   grayscale = true,
   className = "",
   onItemClick,
+  onItemHover,
+  onItemLeave,
 }: AccordionGalleryProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLElement | null)[]>([]);
@@ -165,6 +169,14 @@ const AccordionGallery = ({
   useEffect(() => () => {
     tlRef.current?.kill();
   }, []);
+
+  useEffect(() => {
+    if (active >= 0) {
+      onItemHover?.(active);
+    } else {
+      onItemLeave?.();
+    }
+  }, [active, onItemHover, onItemLeave]);
 
   const handleEnter = (i: number) => {
     if (trigger === "hover") setActive(i);

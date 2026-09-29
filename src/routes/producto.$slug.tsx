@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Truck, Shield, Clock, X } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Truck, Shield, Clock, X, UploadCloud, FileUp, Trash2 } from "lucide-react";
+import { useState, useRef } from "react";
 import AccordionGallery from "@/components/AccordionGallery";
 import { useCart } from "@/components/cart-context";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/products";
 import { getProduct } from "@/lib/catalog.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { uploadRequestFile } from "@/lib/requests.functions";
 
 export const Route = createFileRoute("/producto/$slug")({
   loader: async ({ params }) => {
@@ -34,17 +36,96 @@ function ProductPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { addItem } = useCart();
+  
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const uploadFn = useServerFn(uploadRequestFile);
+
+  const [activeVariant, setActiveVariant] = useState<any>(null);
+
+  const mergeFiles = (incoming: FileList | null) => {
+    if (!incoming) return;
+    const list = Array.from(incoming);
+    const tooBig = list.find((file) => file.size > 25 * 1024 * 1024);
+    if (tooBig) {
+      setError(`"${tooBig.name}" supera los 25 MB.`);
+      return;
+    }
+    setError(null);
+    setFiles((current) => {
+      const next = [...current];
+      for (const file of list) {
+        if (next.length >= 3) break;
+        if (!next.some((item) => item.name === file.name && item.size === file.size)) next.push(file);
+      }
+      return next;
+    });
+  };
+
+  const handleAddToCart = async () => {
+    setIsUploading(true);
+    setError(null);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await uploadFn({ data: formData as any });
+        uploaded.push({ name: file.name, path: res.path, size: file.size });
+      }
+      
+      addItem(product, quantity, {
+        color: selectedColor,
+        size: selectedSize,
+        files: uploaded.length > 0 ? uploaded : undefined
+      });
+      setFiles([]);
+    } catch (e) {
+      console.error(e);
+      setError("Error al subir los archivos. Inténtalo de nuevo.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const images = product.images || [product.image];
+  const allImages = [...images];
+  if (product.variants && product.variants.length > 0) {
+    for (const v of product.variants) {
+      if (v.image && !allImages.includes(v.image)) {
+        allImages.push(v.image);
+      }
+    }
+  }
+
+  const galleryItems = allImages.map((img, i) => {
+    // Find if this image belongs to a variant
+    const variant = product.variants?.find((v: any) => v.image === img);
+    return {
+      image: img,
+      label: variant ? variant.name : (i === 0 ? product.name : `Vista ${i + 1}`),
+    };
+  });
+
+  const handleHoverGallery = (index: number) => {
+    const img = allImages[index];
+    const variant = product.variants?.find((v: any) => v.image === img);
+    if (variant) {
+      setActiveVariant(variant);
+    } else {
+      setActiveVariant(null); // default
+    }
+  };
+
+  const handleLeaveGallery = () => {
+    setActiveVariant(null);
+  };
+
   const discount = product.comparePrice 
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100) 
     : 0;
-
-  // Build accordion items from THIS product's images only (no links to other products)
-  const galleryItems = images.map((img, i) => ({
-    image: img,
-    label: i === 0 ? product.name : `Vista ${i + 1}`,
-  }));
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -83,6 +164,8 @@ function ProductPage() {
                 trigger="hover"
                 className="flex-1"
                 onItemClick={openLightbox}
+                onItemHover={handleHoverGallery}
+                onItemLeave={handleLeaveGallery}
               />
             </div>
 
@@ -94,20 +177,26 @@ function ProductPage() {
           {/* ======== RIGHT: Product Info ======== */}
           <div className="flex flex-col p-6 sm:p-10 lg:p-14">
             <p className="eyebrow">Objeto / {product.slug}</p>
-            <h1 className="mt-4 font-display text-4xl font-bold uppercase leading-none sm:text-5xl lg:text-6xl">{product.name}</h1>
+            <h1 className="mt-4 font-display text-4xl font-bold uppercase leading-none sm:text-5xl lg:text-6xl">
+              {activeVariant ? activeVariant.name : product.name}
+            </h1>
             
             {/* Price */}
             <div className="mt-5 flex items-baseline gap-3 flex-wrap">
-              <span className="text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
-              {product.comparePrice && (
-                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.comparePrice)}</span>
+              <span className="text-3xl font-bold text-primary">
+                {formatPrice(activeVariant && activeVariant.price > 0 ? activeVariant.price : product.price)}
+              </span>
+              {(product.comparePrice || 0) > 0 && !activeVariant && (
+                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.comparePrice!)}</span>
               )}
-              {discount > 0 && (
+              {discount > 0 && !activeVariant && (
                 <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Ahorras {formatPrice(product.comparePrice! - product.price)}</span>
               )}
             </div>
             
-            <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground">{product.description}</p>
+            <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground">
+              {activeVariant && activeVariant.description ? activeVariant.description : product.description}
+            </p>
 
             {/* Colors */}
             {product.colors && product.colors.length > 0 && (
@@ -162,6 +251,58 @@ function ProductPage() {
               )}
             </dl>
 
+            {/* Custom File Upload */}
+            <div className="mt-8">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Adjuntar archivos (Opcional)</p>
+              <div
+                className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
+                  files.length > 0 ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/50"
+                }`}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); mergeFiles(e.dataTransfer.files); }}
+              >
+                <input
+                  type="file"
+                  ref={inputRef}
+                  onChange={(e) => { mergeFiles(e.target.files); e.target.value = ""; }}
+                  multiple
+                  className="hidden"
+                  accept=".stl,.obj,.3mf,.step,.stp,.zip,image/*"
+                />
+                
+                {files.length === 0 ? (
+                  <div className="text-center">
+                    <UploadCloud className="mx-auto mb-3 size-8 text-muted-foreground" />
+                    <p className="text-sm font-medium">Arrastra tus fotos o archivos STL aquí</p>
+                    <p className="mt-1 text-xs text-muted-foreground">STL - OBJ - 3MF - STEP - JPG - PNG</p>
+                    <Button variant="outline" size="sm" className="mt-4" onClick={() => inputRef.current?.click()}>
+                      <FileUp className="mr-2 size-4" /> Seleccionar archivos
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-full space-y-3">
+                    {files.map((f, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-md bg-background px-3 py-2 text-sm border border-border">
+                        <span className="truncate max-w-[200px] sm:max-w-[250px]">{f.name}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
+                          <button onClick={() => setFiles(curr => curr.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-red-500 transition-colors">
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {files.length < 3 && (
+                      <Button variant="outline" size="sm" className="w-full border-dashed" onClick={() => inputRef.current?.click()}>
+                        <Plus className="mr-2 size-4" /> Añadir otro archivo
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+            </div>
+
             {/* Add to Cart */}
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <div className="flex h-12 items-center border border-border rounded-lg">
@@ -169,7 +310,9 @@ function ProductPage() {
                 <span className="w-12 text-center font-semibold">{quantity}</span>
                 <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => q + 1)} aria-label="Aumentar cantidad"><Plus /></Button>
               </div>
-              <Button size="lg" className="h-12 flex-1 rounded-lg" onClick={() => addItem(product, quantity)}><ShoppingBag className="mr-2" /> Añadir al carrito</Button>
+              <Button size="lg" className="h-12 flex-1 rounded-lg" onClick={handleAddToCart} disabled={isUploading}>
+                {isUploading ? "Procesando archivos..." : <><ShoppingBag className="mr-2" /> Añadir al carrito</>}
+              </Button>
             </div>
 
             {/* Trust badges */}

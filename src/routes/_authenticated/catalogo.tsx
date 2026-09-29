@@ -63,6 +63,7 @@ function CatalogoAdminPage() {
       sizes: editingProduct ? editingProduct.sizes : [],
       colors: editingProduct ? editingProduct.colors : [],
       materials: editingProduct ? editingProduct.materials : ["PLA"],
+      variants: JSON.parse(formData.get("variants") as string || "[]"),
     };
     
     if (editingProduct) {
@@ -145,8 +146,31 @@ function CatalogoAdminPage() {
 
 function ProductModal({ product, categories, onClose, onSave }: { product: any, categories: any[], onClose: () => void, onSave: (data: FormData) => void }) {
   const [images, setImages] = useState<string[]>(product?.images || []);
+  const [variants, setVariants] = useState<any[]>(product?.variants || []);
   const [isUploading, setIsUploading] = useState(false);
   const uploadFn = useServerFn(uploadImage);
+
+  const handleVariantImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, vIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await uploadFn({ data: formData as any });
+      if (res.url) {
+        setVariants(curr => {
+          const next = [...curr];
+          next[vIndex].image = res.url;
+          return next;
+        });
+      }
+    } catch {
+      alert("Error subiendo la imagen de variante");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isCover: boolean) => {
     const file = e.target.files?.[0];
@@ -187,6 +211,7 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     formData.set("images", JSON.stringify(images));
+    formData.set("variants", JSON.stringify(variants));
     onSave(formData);
   };
 
@@ -263,8 +288,31 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
 
           <div className="space-y-3">
             <label className="text-gray-300 font-medium">Referencias o variantes</label>
-            <div className="flex gap-4 items-center">
-              <button className="bg-[#111] border border-white/10 text-white px-4 py-2 rounded-md hover:bg-white/5 transition-colors font-medium">
+            <div className="space-y-4">
+              {variants.map((v, i) => (
+                <div key={i} className="bg-[#111] border border-white/10 rounded-lg p-4 space-y-3 relative">
+                  <button type="button" onClick={() => setVariants(curr => curr.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 text-gray-500 hover:text-red-500">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" value={v.name} onChange={(e) => { const val = e.target.value; setVariants(curr => { const next = [...curr]; next[i].name = val; return next; })}} placeholder="Nombre variante" className="w-full bg-[#1a1a1a] border border-white/5 rounded p-2 text-white outline-none focus:border-primary text-sm" />
+                    <input type="number" value={v.price} onChange={(e) => { const val = Number(e.target.value); setVariants(curr => { const next = [...curr]; next[i].price = val; return next; })}} placeholder="Precio total de la variante" className="w-full bg-[#1a1a1a] border border-white/5 rounded p-2 text-white outline-none focus:border-primary text-sm" />
+                  </div>
+                  <textarea value={v.description} onChange={(e) => { const val = e.target.value; setVariants(curr => { const next = [...curr]; next[i].description = val; return next; })}} placeholder="Descripción de la variante" rows={2} className="w-full bg-[#1a1a1a] border border-white/5 rounded p-2 text-white outline-none focus:border-primary text-sm resize-y" />
+                  <div className="flex items-center gap-4">
+                    {v.image && <img src={v.image} className="w-12 h-12 rounded object-cover border border-white/10" />}
+                    <div className="flex-1 relative">
+                      <input type="file" accept="image/*" onChange={(e) => handleVariantImageUpload(e, i)} className="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                      <button type="button" className="bg-white/5 border border-white/10 text-xs px-3 py-1.5 rounded-md text-gray-300">
+                        Cambiar Imagen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-4 items-center mt-2">
+              <button type="button" onClick={() => setVariants([...variants, { image: "", name: "", description: "", price: 0 }])} className="bg-[#111] border border-white/10 text-white px-4 py-2 rounded-md hover:bg-white/5 transition-colors font-medium">
                 Agregar referencia
               </button>
               <span className="text-xs text-gray-500 leading-tight">Cada referencia puede tener nombre, precio, descripción e imagen. Puedes subir una imagen directamente o usar una URL.</span>
@@ -274,7 +322,7 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
           <div className="space-y-2 pt-4 border-t border-white/10">
             <label className="text-gray-300 font-medium">Colores</label>
             <div className="flex gap-3">
-              <input type="text" defaultValue="#e53935" className="flex-1 bg-[#111] border border-white/10 rounded-lg p-3 text-white font-mono outline-none focus:border-primary" />
+              <input type="color" defaultValue="#e53935" className="w-12 h-12 bg-transparent border-0 p-0 cursor-pointer" />
               <button className="bg-[#111] border border-white/10 text-white px-4 py-2 rounded-md hover:bg-white/5 transition-colors font-medium">
                 Agregar color
               </button>
@@ -285,7 +333,7 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
                 <div key={i} className={`w-6 h-6 rounded-full cursor-pointer border ${i===4 ? 'border-primary shadow-[0_0_0_2px_rgba(0,255,136,0.2)]' : 'border-white/20'}`} style={{ backgroundColor: c }} />
               ))}
             </div>
-            <p className="text-xs text-gray-500">Elige una paleta o escribe un HEX manualmente.</p>
+            <p className="text-xs text-gray-500">Selecciona el color haciendo clic en el cuadro de color arriba.</p>
           </div>
 
           <div className="space-y-2">
@@ -338,17 +386,6 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
             <p className="text-xs text-gray-500">Se usará como imagen principal del producto.</p>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-gray-300 font-medium">Más imágenes del producto</label>
-            <div className="flex bg-[#111] border border-white/10 rounded-lg overflow-hidden relative">
-              <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, false)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" disabled={isUploading} />
-              <button type="button" className="bg-white/5 border-r border-white/10 px-4 py-3 text-gray-300 hover:text-white transition-colors flex items-center gap-2">
-                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Elegir archivos'}
-              </button>
-              <span className="px-4 py-3 text-gray-500">Haz clic para subir a la galería</span>
-            </div>
-            <p className="text-xs text-gray-500">Se agregarán a la galería, sin reemplazar la portada.</p>
-          </div>
 
           {images.length > 0 && (
             <div className="space-y-2">
@@ -369,17 +406,6 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
             </div>
           )}
 
-          <div className="space-y-3 pt-4 border-t border-white/10">
-            <label className="text-gray-300 font-medium">Modelo 3D para web (.glb o .gltf)</label>
-            {[1, 2, 3].map(num => (
-              <div key={num} className="flex bg-[#111] border border-white/10 rounded-lg overflow-hidden">
-                <span className="bg-white/5 border-r border-white/10 px-4 py-3 text-white font-medium w-24">Modelo {num}</span>
-                <button className="bg-white/5 border-r border-white/10 px-4 py-3 text-gray-300 hover:text-white transition-colors">Seleccionar archivo</button>
-                <span className="px-4 py-3 text-gray-500">Ningún archivo seleccionado</span>
-              </div>
-            ))}
-            <p className="text-xs text-gray-500">Sube hasta 3 modelos en campos separados. El cliente podrá cambiar entre ellos desde el visor. Límite: 250 MB por archivo.</p>
-          </div>
 
         </div>
 

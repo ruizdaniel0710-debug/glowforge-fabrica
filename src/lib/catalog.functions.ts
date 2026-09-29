@@ -18,6 +18,12 @@ const productSchema = z.object({
   images: z.array(z.string()).optional(),
   stock: z.number().optional(),
   production_days: z.number().optional(),
+  variants: z.array(z.object({
+    image: z.string(),
+    name: z.string(),
+    description: z.string(),
+    price: z.number()
+  })).optional(),
 });
 
 export const listProducts = createServerFn({ method: "GET" })
@@ -42,6 +48,7 @@ export const listProducts = createServerFn({ method: "GET" })
       image: JSON.parse(row.images || '[]')[0] || "",
       comparePrice: row.compare_price,
       productionDays: row.production_days,
+      variants: JSON.parse(row.variants || '[]'),
     }));
   });
 
@@ -57,8 +64,8 @@ export const createProduct = createServerFn({ method: "POST" })
       await dbRun(`
         INSERT INTO products (
           name, slug, description, price, compare_price, category_id,
-          sizes, colors, materials, images, stock, production_days
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          sizes, colors, materials, images, stock, production_days, variants
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         data.name,
         data.slug,
@@ -71,7 +78,8 @@ export const createProduct = createServerFn({ method: "POST" })
         JSON.stringify(data.materials || ["PLA"]),
         JSON.stringify(data.images || []),
         data.stock || 99,
-        data.production_days || 3
+        data.production_days || 3,
+        JSON.stringify(data.variants || [])
       ]);
       
       const id = await dbLastId();
@@ -89,7 +97,7 @@ export const updateProduct = createServerFn({ method: "POST" })
         UPDATE products SET
           name = ?, slug = ?, description = ?, price = ?, compare_price = ?,
           category_id = ?, sizes = ?, colors = ?, materials = ?, images = ?,
-          stock = ?, production_days = ?
+          stock = ?, production_days = ?, variants = ?
         WHERE id = ?
       `, [
         data.name,
@@ -104,6 +112,7 @@ export const updateProduct = createServerFn({ method: "POST" })
         JSON.stringify(data.images || []),
         data.stock || 99,
         data.production_days || 3,
+        JSON.stringify(data.variants || []),
         data.id
       ]);
       
@@ -148,6 +157,7 @@ export const getProduct = createServerFn({ method: "GET" })
       image: JSON.parse(row.images || '[]')[0] || "",
       comparePrice: row.compare_price,
       productionDays: row.production_days,
+      variants: JSON.parse(row.variants || '[]'),
     };
   });
 

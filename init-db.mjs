@@ -271,6 +271,13 @@ if (res.length > 0) {
 const usedIds = Object.values(newCatIds).join(',');
 db.run(`DELETE FROM categories WHERE id NOT IN (${usedIds})`);
 
+try {
+  db.run(`ALTER TABLE products ADD COLUMN variants TEXT DEFAULT '[]'`);
+  console.log("Added variants column to products");
+} catch (e) {
+  // column already exists
+}
+
 const migratedData = db.export();
 fs.writeFileSync(dbPath, Buffer.from(migratedData));
 
