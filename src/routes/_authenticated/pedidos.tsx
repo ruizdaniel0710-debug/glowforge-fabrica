@@ -167,9 +167,27 @@ function OrderModal({ order, onClose }: { order: any, onClose: () => void }) {
               <tbody className="divide-y divide-white/5">
                 {items.map((item: any, i: number) => (
                   <tr key={i}>
-                    <td className="py-3 text-gray-300">{item.name}</td>
-                    <td className="py-3 text-gray-400 text-center">{item.quantity}</td>
-                    <td className="py-3 text-gray-300 text-right">{formatPrice(item.price * item.quantity)}</td>
+                    <td className="py-3 text-gray-300">
+                      <p className="font-semibold">{item.name}</p>
+                      {item.color && <p className="text-xs text-gray-500 mt-0.5">Color: {item.color}</p>}
+                      {item.size && <p className="text-xs text-gray-500 mt-0.5">Tamaño: {item.size}</p>}
+                      {item.externalLink && (
+                        <p className="text-xs mt-1">
+                          Enlace: <a href={item.externalLink} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{item.externalLink}</a>
+                        </p>
+                      )}
+                      {item.files && item.files.length > 0 && (
+                        <div className="mt-1 space-y-1">
+                          {item.files.map((f: any, idx: number) => (
+                            <p key={idx} className="text-[10px] text-gray-500 flex items-center gap-1">
+                              📎 <a href={`https://snakelab-glowforge-fabrica-production.up.railway.app${f.path}`} target="_blank" rel="noopener noreferrer" className="hover:text-white underline">{f.name}</a>
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 text-gray-400 text-center align-top">{item.quantity}</td>
+                    <td className="py-3 text-gray-300 text-right align-top">{formatPrice(item.price * item.quantity)}</td>
                   </tr>
                 ))}
               </tbody>

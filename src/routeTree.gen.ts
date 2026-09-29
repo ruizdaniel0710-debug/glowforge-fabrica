@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SeguimientoRouteImport } from './routes/seguimiento'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authenticated/categorias'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -55,6 +56,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCalculadoraRoute =
+  AuthenticatedCalculadoraRouteImport.update({
+    id: '/calculadora',
+    path: '/calculadora',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCatalogoRoute = AuthenticatedCatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/seguimiento': typeof SeguimientoRoute
   '/terminos': typeof TerminosRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/categorias': typeof AuthenticatedCategoriasRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
   '/seguimiento': typeof SeguimientoRoute
   '/terminos': typeof TerminosRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/categorias': typeof AuthenticatedCategoriasRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/seguimiento': typeof SeguimientoRoute
   '/terminos': typeof TerminosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/categorias': typeof AuthenticatedCategoriasRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/seguimiento'
     | '/terminos'
     | '/admin'
+    | '/calculadora'
     | '/catalogo'
     | '/categorias'
     | '/clientes'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/seguimiento'
     | '/terminos'
     | '/admin'
+    | '/calculadora'
     | '/catalogo'
     | '/categorias'
     | '/clientes'
@@ -203,6 +215,7 @@ export interface FileRouteTypes {
     | '/seguimiento'
     | '/terminos'
     | '/_authenticated/admin'
+    | '/_authenticated/calculadora'
     | '/_authenticated/catalogo'
     | '/_authenticated/categorias'
     | '/_authenticated/clientes'
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/calculadora': {
+      id: '/_authenticated/calculadora'
+      path: '/calculadora'
+      fullPath: '/calculadora'
+      preLoaderRoute: typeof AuthenticatedCalculadoraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/catalogo': {
@@ -347,6 +367,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedCategoriasRoute: typeof AuthenticatedCategoriasRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
@@ -356,6 +377,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedCategoriasRoute: AuthenticatedCategoriasRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,

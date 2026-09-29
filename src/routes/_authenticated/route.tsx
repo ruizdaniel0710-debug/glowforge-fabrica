@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingCart, Tags, Users, Settings, LogOut, ExternalLink, Hexagon, Lock } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tags, Users, Settings, LogOut, ExternalLink, Hexagon, Lock, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -225,6 +225,9 @@ function AdminLayout() {
           </Link>
           <Link to="/configuracion" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 [&.active]:bg-[#e53935]/10 [&.active]:text-[#e53935] transition-colors">
             <Settings className="w-4 h-4" /> Configuración
+          </Link>
+          <Link to="/calculadora" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 [&.active]:bg-[#e53935]/10 [&.active]:text-[#e53935] transition-colors">
+            <Calculator className="w-4 h-4" /> Calculadora 3D
           </Link>
         </nav>
 

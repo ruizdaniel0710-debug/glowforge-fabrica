@@ -346,7 +346,11 @@ function CheckoutModal() {
             id: i.product.id,
             name: i.product.name,
             price: i.product.price,
-            quantity: i.quantity
+            quantity: i.quantity,
+            color: i.color,
+            size: i.size,
+            files: i.files,
+            externalLink: i.externalLink
           })),
           subtotal
         }

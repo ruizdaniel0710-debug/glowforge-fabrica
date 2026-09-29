@@ -30,6 +30,7 @@ const checkoutSchema = z.object({
       path: z.string(),
       size: z.number(),
     })).optional(),
+    externalLink: z.string().optional(),
   })).min(1),
   subtotal: z.number(),
 });

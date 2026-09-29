@@ -42,6 +42,7 @@ function ProductPage() {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const uploadFn = useServerFn(uploadRequestFile);
+  const [externalLink, setExternalLink] = useState("");
 
   const [activeVariant, setActiveVariant] = useState<any>(null);
 
@@ -79,7 +80,8 @@ function ProductPage() {
       addItem(product, quantity, {
         color: selectedColor,
         size: selectedSize,
-        files: uploaded.length > 0 ? uploaded : undefined
+        files: uploaded.length > 0 ? uploaded : undefined,
+        externalLink: externalLink.trim() !== "" ? externalLink.trim() : undefined
       });
       setFiles([]);
     } catch (e) {
@@ -251,8 +253,30 @@ function ProductPage() {
               )}
             </dl>
 
-            {/* Custom File Upload */}
-            <div className="mt-8">
+            {/* MakerWorld Callout */}
+            <div className="mt-8 mb-4 p-4 rounded-lg bg-primary/10 border border-primary/20">
+              <h4 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
+                💡 ¿Buscas más diseños?
+              </h4>
+              <p className="text-xs leading-relaxed text-gray-300">
+                Puedes explorar miles de diseños 3D gratuitos en <a href="https://makerworld.com/es" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">MakerWorld</a>. 
+                Toma una captura del que te guste, descarga el archivo STL, o simplemente copia y pega el enlace del diseño aquí abajo.
+              </p>
+            </div>
+
+            {/* Custom File/Link Upload */}
+            <div className="mt-4">
+              <div className="mb-4">
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Enlace del diseño (Opcional)</p>
+                <input 
+                  type="url" 
+                  value={externalLink}
+                  onChange={(e) => setExternalLink(e.target.value)}
+                  placeholder="https://makerworld.com/es/models/..." 
+                  className="w-full bg-background border border-border rounded-lg p-3 text-sm text-white outline-none focus:border-primary transition-colors" 
+                />
+              </div>
+
               <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Adjuntar archivos (Opcional)</p>
               <div
                 className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${

@@ -7,6 +7,7 @@ type CartLine = {
   color?: string | null;
   size?: string | null;
   files?: { name: string; path: string; size: number }[];
+  externalLink?: string;
 };
 type CartContextValue = {
   items: CartLine[];
@@ -14,7 +15,7 @@ type CartContextValue = {
   totalItems: number;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (product: Product, quantity?: number, options?: { color?: string | null, size?: string | null, files?: { name: string; path: string; size: number }[] }) => void;
+  addItem: (product: Product, quantity?: number, options?: { color?: string | null, size?: string | null, files?: { name: string; path: string; size: number }[], externalLink?: string }) => void;
   changeQuantity: (index: number, change: number) => void;
   removeItem: (index: number) => void;
 };
