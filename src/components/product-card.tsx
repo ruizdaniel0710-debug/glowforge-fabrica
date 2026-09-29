@@ -38,9 +38,12 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
             {product.colors && product.colors.length > 0 && (
               <div className="mb-4 flex flex-wrap justify-center gap-2 translate-y-4 transition-transform delay-150 duration-500 group-hover:translate-y-0">
                 {product.colors.map(color => (
-                  <span key={color} className="rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
-                    {color}
-                  </span>
+                  <div 
+                    key={color} 
+                    className="size-5 rounded-full border border-white/20 shadow-sm" 
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
                 ))}
               </div>
             )}
