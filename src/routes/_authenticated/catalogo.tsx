@@ -319,22 +319,6 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
             </div>
           </div>
 
-          <div className="space-y-2 pt-4 border-t border-white/10">
-            <label className="text-gray-300 font-medium">Colores</label>
-            <div className="flex gap-3">
-              <input type="color" defaultValue="#e53935" className="w-12 h-12 bg-transparent border-0 p-0 cursor-pointer" />
-              <button className="bg-[#111] border border-white/10 text-white px-4 py-2 rounded-md hover:bg-white/5 transition-colors font-medium">
-                Agregar color
-              </button>
-            </div>
-            <div className="flex gap-2 pt-2 flex-wrap">
-              {/* Preset colors */}
-              {['#000000', '#ffffff', '#f5f5f5', '#6b7280', '#d62828', '#ef4444', '#ff8a00', '#f5c542', '#22c55e', '#3ecf91', '#00b8ff', '#2563eb', '#4f46e5', '#8b5cf6', '#c56eff', '#d9a441', '#8b5e3c', '#1a1a2e'].map((c, i) => (
-                <div key={i} className={`w-6 h-6 rounded-full cursor-pointer border ${i===4 ? 'border-primary shadow-[0_0_0_2px_rgba(0,255,136,0.2)]' : 'border-white/20'}`} style={{ backgroundColor: c }} />
-              ))}
-            </div>
-            <p className="text-xs text-gray-500">Selecciona el color haciendo clic en el cuadro de color arriba.</p>
-          </div>
 
           <div className="space-y-2">
             <label className="text-gray-300 font-medium">Dimensiones del modelo (JSON)</label>

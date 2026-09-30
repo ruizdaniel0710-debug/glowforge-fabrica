@@ -38,19 +38,6 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
                 {formatPrice(product.price)}
               </p>
               
-              {product.colors && product.colors.length > 0 && (
-                <div className="mb-4 flex flex-wrap justify-center gap-2 translate-y-4 transition-transform delay-150 duration-500 group-hover:translate-y-0">
-                  {product.colors.map(color => (
-                    <div 
-                      key={color} 
-                      className="size-5 rounded-full border border-white/20 shadow-sm" 
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-              )}
-              
               <div className="translate-y-4 transition-transform delay-200 duration-500 group-hover:translate-y-0">
                 <Button size="lg" className="gap-2" onClick={(e) => { e.preventDefault(); addItem(product); }}>
                   <Plus className="size-4" /> Añadir
@@ -70,18 +57,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
             </p>
             
             <div className="mt-auto">
-              {product.colors && product.colors.length > 0 && (
-                <div className="mb-4 flex flex-wrap gap-1.5">
-                  {product.colors.map(color => (
-                    <div 
-                      key={color} 
-                      className="size-4 rounded-full border border-white/20 shadow-sm" 
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-              )}
+
               
               <Button size="sm" className="w-full gap-2" onClick={(e) => { e.preventDefault(); addItem(product); }}>
                 <Plus className="size-4" /> Añadir al carrito

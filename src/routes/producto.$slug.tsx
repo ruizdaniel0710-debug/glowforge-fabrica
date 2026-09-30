@@ -31,7 +31,7 @@ export const Route = createFileRoute("/producto/$slug")({
 function ProductPage() {
   const product = Route.useLoaderData();
   const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState<string | null>(product.colors?.[0] || null);
+  const [selectedColor, setSelectedColor] = useState<string | null>("#ffffff");
   const [selectedSize, setSelectedSize] = useState<string | null>(product.sizes?.[0] || null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -201,26 +201,24 @@ function ProductPage() {
             </p>
 
             {/* Colors */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="mt-8">
-                <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Color</p>
-                <div className="flex flex-wrap gap-2">
-                  {product.colors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`size-8 rounded-full border-2 transition-all ${
-                        selectedColor === color 
-                          ? "border-primary scale-110 shadow-[0_0_0_2px_rgba(239,43,50,0.3)]" 
-                          : "border-transparent hover:scale-105"
-                      }`}
-                      style={{ backgroundColor: color, boxShadow: color === '#ffffff' ? 'inset 0 0 0 1px rgba(255,255,255,0.3)' : undefined }}
-                      title={color}
-                    />
-                  ))}
+            <div className="mt-8">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Color de Impresión</p>
+              <div className="flex items-center gap-4">
+                <div className="relative size-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm focus-within:border-primary focus-within:shadow-[0_0_0_2px_rgba(239,43,50,0.3)] transition-all">
+                  <input
+                    type="color"
+                    value={selectedColor || "#ffffff"}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="absolute inset-[-10px] w-[150%] h-[150%] p-0 m-0 border-0 cursor-pointer"
+                    title="Elegir color personalizado"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold uppercase">{selectedColor}</span>
+                  <span className="text-xs text-muted-foreground">Haz clic en el círculo para elegir</span>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Sizes */}
             {product.sizes && product.sizes.length > 0 && (
