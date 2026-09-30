@@ -185,13 +185,11 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
       if (res.url) {
         if (isCover) {
           setImages((prev) => {
-            if (prev.length > 0) {
-              return [res.url, ...prev.slice(1)];
-            }
-            return [res.url];
+            const next = prev.length > 0 ? [res.url, ...prev.slice(1)] : [res.url];
+            return Array.from(new Set(next));
           });
         } else {
-          setImages((prev) => [...prev, res.url]);
+          setImages((prev) => Array.from(new Set([...prev, res.url])));
         }
       }
     } catch (err) {

@@ -93,15 +93,18 @@ function ProductPage() {
   };
 
   const images = product.images || [product.image];
-  const allImages = [...images];
   const safeVariants = Array.isArray(product.variants) ? product.variants : [];
   
+  let allImages: string[] = [];
   if (safeVariants.length > 0) {
-    for (const v of safeVariants) {
-      if (v.image && !allImages.includes(v.image)) {
-        allImages.push(v.image);
-      }
+    // If we have variants, only use variant images for the gallery to avoid duplicating the cover
+    allImages = safeVariants.filter(v => v.image).map(v => v.image);
+    // Fallback if no variant has an image
+    if (allImages.length === 0) {
+      allImages = [...images];
     }
+  } else {
+    allImages = [...images];
   }
 
   const galleryItems = allImages.map((img, i) => {
