@@ -184,9 +184,14 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
       
       if (res.url) {
         if (isCover) {
-          setImages([res.url, ...images.filter(img => img !== res.url)]);
+          setImages((prev) => {
+            if (prev.length > 0) {
+              return [res.url, ...prev.slice(1)];
+            }
+            return [res.url];
+          });
         } else {
-          setImages([...images, res.url]);
+          setImages((prev) => [...prev, res.url]);
         }
       }
     } catch (err) {

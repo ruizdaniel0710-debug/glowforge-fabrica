@@ -94,8 +94,10 @@ function ProductPage() {
 
   const images = product.images || [product.image];
   const allImages = [...images];
-  if (product.variants && product.variants.length > 0) {
-    for (const v of product.variants) {
+  const safeVariants = Array.isArray(product.variants) ? product.variants : [];
+  
+  if (safeVariants.length > 0) {
+    for (const v of safeVariants) {
       if (v.image && !allImages.includes(v.image)) {
         allImages.push(v.image);
       }
@@ -104,7 +106,7 @@ function ProductPage() {
 
   const galleryItems = allImages.map((img, i) => {
     // Find if this image belongs to a variant
-    const variant = product.variants?.find((v: any) => v.image === img);
+    const variant = safeVariants.find((v: any) => v.image === img);
     return {
       image: img,
       label: variant ? variant.name : (i === 0 ? product.name : `Vista ${i + 1}`),
@@ -113,7 +115,7 @@ function ProductPage() {
 
   const handleHoverGallery = (index: number) => {
     const img = allImages[index];
-    const variant = product.variants?.find((v: any) => v.image === img);
+    const variant = safeVariants.find((v: any) => v.image === img);
     if (variant) {
       setActiveVariant(variant);
     } else {

@@ -26,6 +26,15 @@ const productSchema = z.object({
   })).optional(),
 });
 
+function safeParseArray(jsonStr: string | null | undefined): any[] {
+  try {
+    const parsed = JSON.parse(jsonStr || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export const listProducts = createServerFn({ method: "GET" })
   .handler(async () => {
     const rows = await dbAll(`
@@ -48,7 +57,7 @@ export const listProducts = createServerFn({ method: "GET" })
       image: JSON.parse(row.images || '[]')[0] || "",
       comparePrice: row.compare_price,
       productionDays: row.production_days,
-      variants: JSON.parse(row.variants || '[]'),
+      variants: safeParseArray(row.variants),
     }));
   });
 
@@ -157,7 +166,7 @@ export const getProduct = createServerFn({ method: "GET" })
       image: JSON.parse(row.images || '[]')[0] || "",
       comparePrice: row.compare_price,
       productionDays: row.production_days,
-      variants: JSON.parse(row.variants || '[]'),
+      variants: safeParseArray(row.variants),
     };
   });
 
