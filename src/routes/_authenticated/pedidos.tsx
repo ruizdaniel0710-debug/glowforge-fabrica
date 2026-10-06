@@ -22,14 +22,21 @@ function PedidosPage() {
   const deleteFn = useServerFn(deleteOrder);
   const qc = useQueryClient();
   
-  const list = useQuery({ queryKey: ["store-orders"], queryFn: () => listFn() });
+  const list = useQuery({
+    queryKey: ["store-orders"],
+    queryFn: () => {
+      const token = sessionStorage.getItem("admin_token") || "";
+      return listFn({ data: { _adminToken: token } });
+    },
+  });
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const orders = list.data || [];
 
   const handleUpdateStatus = async (id: number, newStatus: string) => {
     try {
-      await updateFn({ data: { id, status: newStatus } });
+      const token = sessionStorage.getItem("admin_token") || "";
+      await updateFn({ data: { id, status: newStatus, _adminToken: token } });
       qc.invalidateQueries({ queryKey: ["store-orders"] });
     } catch (e) {
       alert("Error actualizando pedido");
@@ -39,7 +46,8 @@ function PedidosPage() {
   const handleDelete = async (id: number) => {
     if (confirm("¿Estás seguro de que deseas eliminar este pedido permanentemente?")) {
       try {
-        await deleteFn({ data: { id } });
+        const token = sessionStorage.getItem("admin_token") || "";
+        await deleteFn({ data: { id, _adminToken: token } });
         qc.invalidateQueries({ queryKey: ["store-orders"] });
         if (selectedOrder?.id === id) setSelectedOrder(null);
       } catch (e) {

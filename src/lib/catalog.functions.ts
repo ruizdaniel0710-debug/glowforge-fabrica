@@ -3,27 +3,30 @@ import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { dbRun, dbAll, dbGet, dbLastId, getDb } from "./db";
+import { assertAdmin } from "./auth.functions";
+import { checkRateLimit } from "./server-auth";
 
 // Esquema de producto
 const productSchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  description: z.string().optional(),
-  price: z.number().min(0),
-  compare_price: z.number().optional().nullable(),
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200),
+  description: z.string().max(5000).optional(),
+  price: z.number().min(0).max(999999999),
+  compare_price: z.number().max(999999999).optional().nullable(),
   category_id: z.number().optional().nullable(),
-  sizes: z.array(z.string()).optional(),
-  colors: z.array(z.string()).optional(),
-  materials: z.array(z.string()).optional(),
-  images: z.array(z.string()).optional(),
-  stock: z.number().optional(),
-  production_days: z.number().optional(),
+  sizes: z.array(z.string().max(50)).max(20).optional(),
+  colors: z.array(z.string().max(20)).max(20).optional(),
+  materials: z.array(z.string().max(50)).max(10).optional(),
+  images: z.array(z.string().max(500)).max(20).optional(),
+  stock: z.number().min(0).max(99999).optional(),
+  production_days: z.number().min(0).max(365).optional(),
   variants: z.array(z.object({
-    image: z.string(),
-    name: z.string(),
-    description: z.string(),
-    price: z.number()
-  })).optional(),
+    image: z.string().max(500),
+    name: z.string().max(200),
+    description: z.string().max(1000),
+    price: z.number().min(0).max(999999999)
+  })).max(50).optional(),
+  _adminToken: z.string().optional(),
 });
 
 function safeParseArray(jsonStr: string | null | undefined): any[] {
@@ -69,6 +72,7 @@ export const listCategories = createServerFn({ method: "GET" })
 export const createProduct = createServerFn({ method: "POST" })
   .validator((data: unknown) => productSchema.parse(data))
   .handler(async ({ data }) => {
+    assertAdmin(data._adminToken);
     try {
       await dbRun(`
         INSERT INTO products (
@@ -94,13 +98,15 @@ export const createProduct = createServerFn({ method: "POST" })
       const id = await dbLastId();
       return { success: true, id };
     } catch (e: any) {
-      throw new Error(e.message);
+      console.error("createProduct error:", e);
+      throw new Error("Error creando el producto.");
     }
   });
 
 export const updateProduct = createServerFn({ method: "POST" })
   .validator((data: unknown) => z.object({ id: z.number() }).and(productSchema).parse(data))
   .handler(async ({ data }) => {
+    assertAdmin(data._adminToken);
     try {
       await dbRun(`
         UPDATE products SET
@@ -127,18 +133,21 @@ export const updateProduct = createServerFn({ method: "POST" })
       
       return { success: true };
     } catch (e: any) {
-      throw new Error(e.message);
+      console.error("updateProduct error:", e);
+      throw new Error("Error actualizando el producto.");
     }
   });
 
 export const deleteProduct = createServerFn({ method: "POST" })
-  .validator((data: unknown) => z.object({ id: z.number() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.number(), _adminToken: z.string().optional() }).parse(data))
   .handler(async ({ data }) => {
+    assertAdmin(data._adminToken);
     try {
       await dbRun('DELETE FROM products WHERE id = ?', [data.id]);
       return { success: true };
     } catch (e: any) {
-      throw new Error(e.message);
+      console.error("deleteProduct error:", e);
+      throw new Error("Error eliminando el producto.");
     }
   });
 
@@ -170,6 +179,22 @@ export const getProduct = createServerFn({ method: "GET" })
     };
   });
 
+// Magic bytes for image format validation
+const IMAGE_MAGIC_BYTES: Record<string, number[][]> = {
+  png: [[0x89, 0x50, 0x4E, 0x47]],
+  jpg: [[0xFF, 0xD8, 0xFF]],
+  jpeg: [[0xFF, 0xD8, 0xFF]],
+  webp: [[0x52, 0x49, 0x46, 0x46]], // RIFF header
+};
+
+function validateMagicBytes(buffer: Buffer, ext: string): boolean {
+  const signatures = IMAGE_MAGIC_BYTES[ext];
+  if (!signatures) return false;
+  return signatures.some(sig =>
+    sig.every((byte, i) => buffer[i] === byte)
+  );
+}
+
 export const uploadImage = createServerFn({ method: "POST" })
   .validator((data: unknown) => {
     if (!(data instanceof FormData)) {
@@ -177,21 +202,19 @@ export const uploadImage = createServerFn({ method: "POST" })
     }
     const file = data.get("file");
     
-    // En Node/Nitro, a veces los archivos se parsean como Blob con propiedad name
     if (!file || typeof file === "string" || !(file instanceof Blob)) {
       throw new Error("Expected File or Blob");
     }
     
-    // Obtener nombre (depende de si es File o Blob con name)
     const fileName = (file as any).name || "upload.png";
     
-    // 1. Validación de tamaño (Máximo 5MB para imágenes de catálogo)
+    // 1. Size limit (5MB)
     const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       throw new Error(`La imagen excede el límite de 5MB permitido.`);
     }
 
-    // 2. Validación estricta de extensión para evitar scripts maliciosos
+    // 2. Extension whitelist
     const ext = fileName.split('.').pop()?.toLowerCase() || "";
     const allowedExtensions = ["png", "jpg", "jpeg", "webp"];
     
@@ -199,18 +222,34 @@ export const uploadImage = createServerFn({ method: "POST" })
       throw new Error(`Tipo de archivo no permitido: .${ext}. Solo se permiten imágenes.`);
     }
 
-    return { file, fileName };
+    const tokenField = data.get("_adminToken");
+    const adminToken = typeof tokenField === "string" ? tokenField : "";
+
+    return { file, fileName, ext, adminToken };
   })
   .handler(async ({ data }) => {
-    const { file, fileName } = data;
+    const { file, fileName, ext, adminToken } = data;
+    assertAdmin(adminToken);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const filename = `img-${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+    // 3. MIME / Magic-bytes validation — prevents disguised executables
+    if (!validateMagicBytes(buffer, ext)) {
+      throw new Error("El contenido del archivo no coincide con una imagen válida.");
+    }
     
-    // Save to the persistent data volume instead of the ephemeral public folder
+    // Sanitize filename strictly
+    const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_').substring(0, 100);
+    const filename = `img-${Date.now()}-${safeName}`;
+    
     const dir = path.resolve(process.cwd(), "data", "uploads", "images");
     await fs.mkdir(dir, { recursive: true });
     const uploadPath = path.resolve(dir, filename);
+    
+    // Final path traversal guard
+    if (!uploadPath.startsWith(dir)) {
+      throw new Error("Ruta de archivo no válida.");
+    }
     
     await fs.writeFile(uploadPath, buffer);
     return { url: `/uploads/images/${filename}` };

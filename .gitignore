@@ -34,3 +34,14 @@ dist-ssr
 # Base de datos local e imágenes subidas (para que no sobreescriban producción al desplegar)
 data/
 public/uploads/
+
+# Environment variables with SECRETS (never commit). Real secrets
+# (ADMIN_PASS_HASH, RESEND_API_KEY...) go in Railway Variables.
+# Note: .env only holds PUBLIC Supabase publishable keys needed at build time.
+.env.local
+.env.production
+.env.*.local
+
+# Archivos de pruebas locales
+dump.html
+test-upload.js

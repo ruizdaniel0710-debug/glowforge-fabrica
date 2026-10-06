@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listOrders } from "@/lib/orders.functions";
+import { loginAdmin, validateAdminSession, logoutAdmin } from "@/lib/auth.functions";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,45 +17,67 @@ export const Route = createFileRoute("/_authenticated")({
 function AdminLayout() {
   const navigate = useNavigate();
   const listFn = useServerFn(listOrders);
+  const loginFn = useServerFn(loginAdmin);
+  const validateFn = useServerFn(validateAdminSession);
+  const logoutFn = useServerFn(logoutAdmin);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const knownOrdersRef = useRef<Set<string>>(new Set());
 
-  // Estado de Autenticación
+  // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
   
-  // Estados para el Formulario de Login
+  // Login form states
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
-    // Verificamos si hay sesión activa (usando sessionStorage como fallback)
-    const session = sessionStorage.getItem("admin_session");
-    if (session === "true") {
-      setIsAuthenticated(true);
+    // Check if we have a stored token and validate it on the server
+    const storedToken = sessionStorage.getItem("admin_token");
+    if (storedToken) {
+      validateFn({ data: { token: storedToken } }).then(res => {
+        if (res.valid) {
+          setAdminToken(storedToken);
+          setIsAuthenticated(true);
+        } else {
+          sessionStorage.removeItem("admin_token");
+        }
+        setIsCheckingAuth(false);
+      }).catch(() => {
+        sessionStorage.removeItem("admin_token");
+        setIsCheckingAuth(false);
+      });
+    } else {
+      setIsCheckingAuth(false);
     }
-    setIsCheckingAuth(false);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
 
-    // Aquí usamos credenciales por defecto (admin / snakelab2026) 
-    // Cuando conectes Supabase correctamente, esto se cambiaría por supabase.auth.signInWithPassword()
-    if (username === "admin" && password === "snakelab2026") {
-      sessionStorage.setItem("admin_session", "true");
-      setIsAuthenticated(true);
-      toast.success("Bienvenido al panel de administración");
-    } else {
-      setLoginError("Usuario o contraseña incorrectos");
+    try {
+      const result = await loginFn({ data: { username, password } });
+      if (result.success && result.token) {
+        sessionStorage.setItem("admin_token", result.token);
+        setAdminToken(result.token);
+        setIsAuthenticated(true);
+        toast.success("Bienvenido al panel de administración");
+      }
+    } catch (err: any) {
+      setLoginError(err.message || "Error de autenticación");
       toast.error("Credenciales inválidas");
     }
   };
 
   const signOut = async () => {
-    sessionStorage.removeItem("admin_session");
+    if (adminToken) {
+      try { await logoutFn({ data: { token: adminToken } }); } catch {}
+    }
+    sessionStorage.removeItem("admin_token");
+    setAdminToken(null);
     setIsAuthenticated(false);
     await supabase.auth.signOut();
     navigate({ to: "/" });
@@ -63,7 +86,7 @@ function AdminLayout() {
   // Polling every 30s for notifications
   const { data: orders = [] } = useQuery({
     queryKey: ["store-orders"],
-    queryFn: () => listFn(),
+    queryFn: () => listFn({ data: { _adminToken: adminToken || "" } }),
     refetchInterval: 30000,
     enabled: isAuthenticated, // Solo hacer polling si está logueado
   });

@@ -231,6 +231,8 @@ function CustomPaymentModal({ request, onClose, onSuccess }: { request: any; onC
       await payFn({
         data: {
           id: request.id,
+          code: request.code,
+          email: request.email,
           shipping: {
             phone: formData.get("phone") as string,
             address: formData.get("address") as string,

@@ -34,7 +34,8 @@ function CatalogoAdminPage() {
 
   const handleDelete = async (id: number) => {
     if (confirm("¿Eliminar producto permanentemente?")) {
-      await delProd({ data: { id } });
+      const token = sessionStorage.getItem("admin_token") || "";
+      await delProd({ data: { id, _adminToken: token } });
       router.invalidate();
     }
   };
@@ -66,10 +67,12 @@ function CatalogoAdminPage() {
       variants: JSON.parse(formData.get("variants") as string || "[]"),
     };
     
+    const token = sessionStorage.getItem("admin_token") || "";
+    
     if (editingProduct) {
-      await updProd({ data: { id: editingProduct.id, ...data } });
+      await updProd({ data: { id: editingProduct.id, ...data, _adminToken: token } });
     } else {
-      await addProd({ data });
+      await addProd({ data: { ...data, _adminToken: token } });
     }
     
     setIsModalOpen(false);
@@ -157,6 +160,7 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("_adminToken", sessionStorage.getItem("admin_token") || "");
       const res = await uploadFn({ data: formData as any });
       if (res.url) {
         setVariants(curr => {
@@ -180,6 +184,7 @@ function ProductModal({ product, categories, onClose, onSave }: { product: any, 
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("_adminToken", sessionStorage.getItem("admin_token") || "");
       const res = await uploadFn({ data: formData as any });
       
       if (res.url) {

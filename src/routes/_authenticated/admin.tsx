@@ -22,7 +22,8 @@ function AdminDashboard() {
   const deleteFn = useServerFn(deleteCustomRequest);
   const qc = useQueryClient();
   
-  const list = useQuery({ queryKey: ["custom-requests"], queryFn: () => listFn() });
+  const tok = () => (typeof window !== "undefined" ? sessionStorage.getItem("admin_token") || "" : "");
+  const list = useQuery({ queryKey: ["custom-requests"], queryFn: () => listFn({ data: { _adminToken: tok() } }) });
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const orders = list.data || [];
@@ -31,13 +32,13 @@ function AdminDashboard() {
   const totalSales = orders.reduce((sum, o) => sum + (o.quote_amount || 0), 0);
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
-    await updateFn({ data: { id, status: newStatus as any } });
+    await updateFn({ data: { id, status: newStatus as any, _adminToken: tok() } });
     qc.invalidateQueries({ queryKey: ["custom-requests"] });
   };
 
   const handleDeleteOrder = async (id: string) => {
     if (confirm("¿Estás seguro de que quieres eliminar esta solicitud? Esta acción no se puede deshacer.")) {
-      await deleteFn({ data: { id } });
+      await deleteFn({ data: { id, _adminToken: tok() } });
       qc.invalidateQueries({ queryKey: ["custom-requests"] });
     }
   };

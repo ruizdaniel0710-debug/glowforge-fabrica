@@ -4,8 +4,14 @@ import path from "path";
 import fs from "fs/promises";
 import { dbRun, dbAll, dbGet } from "./db";
 import { Resend } from "resend";
+import { assertAdmin } from "./auth.functions";
+import { checkRateLimit, getClientIp } from "./server-auth";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 export const REQUEST_STATUSES = ["recibida", "en revisión", "cotizada", "aprobada", "en impresión", "enviada", "cancelada"] as const;
 
@@ -29,6 +35,9 @@ export const createCustomRequest = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
+    if (!checkRateLimit(`create-request:${getClientIp()}`, 5, 60_000)) {
+      throw new Error("Demasiadas solicitudes. Intenta en un momento.");
+    }
     const code = makeCode();
     try {
       await dbRun(`
@@ -42,7 +51,7 @@ export const createCustomRequest = createServerFn({ method: "POST" })
         subject: `Cotización Recibida - Código ${code}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #7c3aed;">¡Hola, ${data.name}!</h2>
+            <h2 style="color: #7c3aed;">¡Hola, ${escapeHtml(data.name)}!</h2>
             <p>Hemos recibido tu solicitud de cotización correctamente.</p>
             <p>Tu código de seguimiento es: <strong>${code}</strong></p>
             <p>Puedes revisar el estado de tu cotización en nuestra página de <a href="https://snakelab.site/seguimiento">Seguimiento</a>.</p>
@@ -61,6 +70,9 @@ export const createCustomRequest = createServerFn({ method: "POST" })
 export const lookupCustomRequest = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ code: z.string().trim().max(20), email: z.string().trim().email().max(255) }).parse(d))
   .handler(async ({ data }) => {
+    if (!checkRateLimit(`lookup-request:${getClientIp()}`, 15, 60_000)) {
+      throw new Error("Demasiadas consultas. Intenta en un momento.");
+    }
     const req = await dbGet(`SELECT * FROM custom_requests WHERE code = ? AND email = ?`, [data.code.toUpperCase(), data.email.toLowerCase()]);
     if (!req) return { found: false as const };
     
@@ -84,8 +96,10 @@ export const lookupCustomRequest = createServerFn({ method: "POST" })
     };
   });
 
-export const listCustomRequests = createServerFn({ method: "GET" })
-  .handler(async () => {
+export const listCustomRequests = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({ _adminToken: z.string().max(128).optional() }).parse(d))
+  .handler(async ({ data }) => {
+    assertAdmin(data._adminToken);
     const reqs = await dbAll(`SELECT * FROM custom_requests ORDER BY created_at DESC`);
     return reqs.map(req => ({
       ...req,
@@ -100,10 +114,12 @@ export const updateCustomRequest = createServerFn({ method: "POST" })
   .validator((d: unknown) =>
     z.object({
       id: z.union([z.string(), z.number()]),
-      status: z.enum(REQUEST_STATUSES)
+      status: z.enum(REQUEST_STATUSES),
+      _adminToken: z.string().max(128).optional(),
     }).parse(d)
   )
   .handler(async ({ data }) => {
+    assertAdmin(data._adminToken);
     try {
       await dbRun(`UPDATE custom_requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [data.status, Number(data.id)]);
       return { success: true };
@@ -116,15 +132,26 @@ export const updateCustomRequest = createServerFn({ method: "POST" })
 export const payCustomRequest = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({
     id: z.number(),
+    code: z.string().trim().max(20),
+    email: z.string().trim().email().max(255),
     shipping: z.object({
-      phone: z.string(),
-      address: z.string(),
-      department: z.string(),
-      city: z.string(),
-      paymentMethod: z.string(),
+      phone: z.string().max(30),
+      address: z.string().max(300),
+      department: z.string().max(100),
+      city: z.string().max(100),
+      paymentMethod: z.string().max(50),
     })
   }).parse(d))
   .handler(async ({ data }) => {
+    if (!checkRateLimit(`pay-request:${getClientIp()}`, 10, 60_000)) {
+      throw new Error("Demasiadas solicitudes. Intenta en un momento.");
+    }
+    // Ownership check: only the customer who knows code + email can approve/pay
+    const owned = await dbGet(
+      `SELECT id FROM custom_requests WHERE id = ? AND code = ? AND email = ?`,
+      [data.id, data.code.toUpperCase(), data.email.toLowerCase()]
+    );
+    if (!owned) throw new Error("Solicitud no encontrada.");
     try {
       await dbRun(`
         UPDATE custom_requests 
@@ -161,10 +188,13 @@ export const uploadRequestFile = createServerFn({ method: "POST" })
     return { file };
   })
   .handler(async ({ data }) => {
+    if (!checkRateLimit(`upload-request:${getClientIp()}`, 20, 60_000)) {
+      throw new Error("Demasiadas subidas. Intenta en un momento.");
+    }
     const { file } = data;
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const filename = `req-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const filename = `req-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_').substring(0, 100)}`;
     
     // Ensure the uploads/requests directory exists
     const dirPath = path.resolve(process.cwd(), "public", "uploads", "requests");
@@ -176,8 +206,9 @@ export const uploadRequestFile = createServerFn({ method: "POST" })
   });
 
 export const deleteCustomRequest = createServerFn({ method: "POST" })
-  .validator((d: unknown) => z.object({ id: z.union([z.string(), z.number()]) }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.union([z.string(), z.number()]), _adminToken: z.string().max(128).optional() }).parse(d))
   .handler(async ({ data }) => {
+    assertAdmin(data._adminToken);
     try {
       await dbRun(`DELETE FROM request_replies WHERE request_id = ?`, [Number(data.id)]);
       await dbRun(`DELETE FROM custom_requests WHERE id = ?`, [Number(data.id)]);
