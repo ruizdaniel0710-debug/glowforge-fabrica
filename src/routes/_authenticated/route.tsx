@@ -59,7 +59,7 @@ function AdminLayout() {
     setLoginError("");
 
     try {
-      const result = await loginFn({ data: { username, password } });
+      const result = await loginFn({ data: { username: username.trim(), password: password.trim() } });
       if (result.success && result.token) {
         sessionStorage.setItem("admin_token", result.token);
         setAdminToken(result.token);
