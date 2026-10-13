@@ -7,7 +7,7 @@ import { Resend } from "resend";
 import { assertAdmin } from "./auth.functions";
 import { checkRateLimit, getClientIp } from "./server-auth";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env["RESEND_API_KEY"] ? new Resend(process.env["RESEND_API_KEY"]) : null;
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -45,7 +45,7 @@ export const createCustomRequest = createServerFn({ method: "POST" })
         VALUES (?, ?, ?, ?, ?)
       `, [code, data.name, data.email.toLowerCase(), data.notes, JSON.stringify(data.files)]);
 
-      resend.emails.send({
+      resend?.emails.send({
         from: 'SNAKELAB <ventas@snakelab.site>',
         to: data.email.toLowerCase(),
         subject: `Cotización Recibida - Código ${code}`,
@@ -58,7 +58,7 @@ export const createCustomRequest = createServerFn({ method: "POST" })
             <p>Pronto uno de nuestros expertos revisará los archivos y te enviará el valor final. ¡Gracias por elegir Snakelab!</p>
           </div>
         `
-      }).catch(console.error);
+      })?.catch(console.error);
 
       return { code };
     } catch (e: any) {
